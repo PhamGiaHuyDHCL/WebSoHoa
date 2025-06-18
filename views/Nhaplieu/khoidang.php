@@ -69,7 +69,7 @@ foreach ($scan as $item) {
             <input type="hidden" name="scan_vanban_Id" value="<?= $selectedScanId ?>">
 
             <div class="row mb-2">
-              <div class="col"><label class="form-label">Mã phòng </label><input name="id_phong" class="form-control" required></div>
+              <div class="col"><label class="form-label">Mã phòng *</label><input name="id_phong" class="form-control" required></div>
               <div class="col"><label class="form-label">Mã mục lục *</label><input name="id_mucluc" class="form-control" required></div>
               <div class="col"><label class="form-label">Mã ĐVBQ *</label><input name="id_dvbq" class="form-control" required></div>
               <div class="col"><label class="form-label">Mã hồ sơ *</label><input name="ma_hoso" class="form-control" required></div>
