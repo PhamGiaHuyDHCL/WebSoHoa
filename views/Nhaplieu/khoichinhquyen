@@ -1,0 +1,88 @@
+<?php include '../layouts/header.php'; ?>
+<div class="container-fluid px-3">
+  <!-- Thanh tiêu đề -->
+  <div class="d-flex justify-content-between align-items-center border-bottom py-2">
+    <div class="d-flex align-items-center">
+      <img src="/websohoa/public/images/logo.png" alt="Logo" width="28" class="me-2">
+      <select class="form-select form-select-sm w-auto me-2">
+        <option selected>[Bình Minh] 484TTYT.pdf</option>
+      </select>
+      <button class="btn btn-outline-primary btn-sm">📂 Mở mục lục</button>
+    </div>
+    <div>
+      <span class="me-2">👤 PHAN THANH GIANG</span> | <a href="#">Đăng xuất</a>
+    </div>
+  </div>
+
+  <div class="row g-0 mt-3">
+    <!-- Khung PDF (2/3) -->
+    <div class="col-md-8 border-end pe-3" style="height: 90vh; overflow-y: auto; position: relative;">
+      <div class="border text-center p-2">
+        <img src="/websohoa/public/images/demo-pdf.png" class="img-fluid" alt="PDF Page">
+      </div>
+      <!-- Nút điều hướng PDF dọc bên phải -->
+      <div class="position-absolute top-0 end-0 pe-3 pt-4 d-flex flex-column">
+        <button class="btn btn-outline-secondary btn-sm mb-2">⬆️</button>
+        <button class="btn btn-outline-secondary btn-sm mb-2">🔍</button>
+        <button class="btn btn-outline-secondary btn-sm mb-2">🔄</button>
+        <button class="btn btn-outline-secondary btn-sm mb-2">🔍</button>
+        <button class="btn btn-outline-secondary btn-sm">⬇️</button>
+      </div>
+    </div>
+
+    <!-- Nhập liệu (1/3) -->
+    <div class="col-md-4 ps-3">
+      <div class="card">
+        <div class="card-header"><strong>Nhập liệu</strong></div>
+        <div class="card-body">
+          <form method="post" action="/websohoa/index.php?controller=vanban&action=save">
+            <div class="row mb-2">
+              <div class="col"><input name="ma_phong" type="text" class="form-control" placeholder="Mã phòng *" value="29"></div>
+              <div class="col"><input name="ma_muc_luc" type="text" class="form-control" placeholder="Mã mục lục *" value="1"></div>
+            </div>
+            <div class="row mb-2">
+              <div class="col"><input name="ma_dvbq" type="text" class="form-control" placeholder="Mã ĐVBQ *" value="0759"></div>
+              <div class="col"><input name="ma_ho_so" type="text" class="form-control" placeholder="Mã hồ sơ *"></div>
+            </div>
+            <div class="mb-2"><input name="so_van_ban" type="text" class="form-control" placeholder="Số văn bản" value="484/TTYT"></div>
+            <div class="mb-2"><textarea name="trich_yeu" class="form-control" rows="2" placeholder="Trích yếu">V/v triển khai thực hiện thử nghiệm bệnh án điện tử (EMR)</textarea></div>
+            <div class="row mb-2">
+              <div class="col"><input name="ngay_vb" type="date" class="form-control"></div>
+              <div class="col">
+                <select name="do_mat" class="form-select">
+                  <option value="Thường" selected>Thường</option>
+                  <option value="Mật">Mật</option>
+                  <option value="Tối mật">Tối mật</option>
+                </select>
+              </div>
+            </div>
+            <div class="mb-2"><input name="tac_gia" type="text" class="form-control" placeholder="Tác giả văn bản" value="Trung tâm Y tế Thị xã Bình Minh"></div>
+            <div class="row mb-2">
+              <div class="col">
+                <select name="the_loai" class="form-select">
+                  <option value="Báo cáo" selected>Báo cáo</option>
+                  <option value="Biên bản">Biên bản</option>
+                  <option value="Chỉ thị">Chỉ thị</option>
+                  <option value="Chương trình">Chương trình</option>
+                  <option value="Công văn">Công văn</option>
+                  <option value="Danh sách">Danh sách</option>
+                  <option value="Đề án">Đề án</option>
+                </select>
+              </div>
+              <div class="col"><input name="so_trang" type="number" class="form-control" placeholder="Số trang" value="1"></div>
+              <div class="col"><input name="so_thu_tu" type="text" class="form-control" placeholder="Số thứ tự"></div>
+            </div>
+            <div class="row mb-2">
+              <div class="col"><input name="nguoi_ky" type="text" class="form-control" placeholder="Người ký" value="BSCKII. Nguyễn Hữu Phước"></div>
+              <div class="col"><input name="trang_so" type="text" class="form-control" placeholder="Trang số"></div>
+            </div>
+            <div class="text-end">
+              <button type="submit" class="btn btn-success">💾 Lưu thay đổi</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<?php include '../layouts/footer.php'; ?>
