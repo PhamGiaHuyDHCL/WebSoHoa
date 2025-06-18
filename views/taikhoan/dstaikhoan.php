@@ -158,7 +158,7 @@ $result = $conn->query($sql);
   <?php if ($msg): ?>
     <?php
     $alerts = [
-      'success' => ['success', ' Tạo tài khoản thành công!'],
+      'success' => ['success', '✔ Tạo tài khoản thành công!'],
       'cccd_exist' => ['warning', '⚠️ CCCD đã tồn tại trong hệ thống!'],
       'invalid_sdt' => ['warning', '⚠️ Số điện thoại phải đúng 10 chữ số!'],
       'invalid_cccd' => ['warning', '⚠️ CCCD phải đúng 12 chữ số!'],
