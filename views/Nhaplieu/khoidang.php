@@ -14,13 +14,15 @@ $dvbq     = $model->getDonViBaoQuan();
 $doMat    = $model->getDoMat();
 $theLoai  = $model->getTheLoai();
 
-// Lấy file được chọn
+// Lấy đường dẫn file được chọn
 $selectedFilePath = $_GET['file'] ?? '';
 $selectedScanId = null;
 $mucLucInfo = null;
 
+// Tìm file được chọn
 foreach ($scan as $item) {
-    if ($item['path'] === $selectedFilePath) {
+    $generatedPath = "uploads/{$item['ma_phong']}/{$item['khoa']}/{$item['hop_ho_so']}/{$item['ten_taptin']}";
+    if ($generatedPath === $selectedFilePath) {
         $selectedScanId = $item['id'];
         $mucLucInfo = $item;
         break;
@@ -29,14 +31,18 @@ foreach ($scan as $item) {
 ?>
 
 <div class="container-fluid">
-  <div class="d-flex justify-content-between p-3 border-bottom">
+  <!-- Header -->
+  <div class="d-flex justify-content-between p-3 border-bottom bg-light">
     <div>
       <form method="get">
         <input type="hidden" name="controller" value="khoidang">
+        <label class="form-label fw-bold mb-0">Chọn file PDF:</label>
         <select name="file" class="form-select d-inline w-auto" onchange="this.form.submit()">
           <option value="">-- Chọn file PDF --</option>
-          <?php foreach ($scan as $file): ?>
-            <option value="<?= $file['path'] ?>" <?= ($file['path'] === $selectedFilePath) ? 'selected' : '' ?>>
+          <?php foreach ($scan as $file): 
+            $generatedPath = "uploads/{$file['ma_phong']}/{$file['khoa']}/{$file['hop_ho_so']}/{$file['ten_taptin']}";
+          ?>
+            <option value="<?= $generatedPath ?>" <?= ($generatedPath === $selectedFilePath) ? 'selected' : '' ?>>
               <?= $file['folder_name'] ?> <?= $file['dataentry_status'] == 2 ? '✅' : '' ?>
             </option>
           <?php endforeach; ?>
@@ -44,26 +50,27 @@ foreach ($scan as $item) {
       </form>
     </div>
     <div>
-      <button class="btn btn-outline-primary btn-sm" disabled>Mở mục lục</button>
+      <button class="btn btn-outline-secondary btn-sm" disabled>📂 Mở mục lục</button>
     </div>
   </div>
 
+  <!-- Nội dung -->
   <div class="row g-0">
-    <!-- PDF Viewer -->
-    <div class="col-md-8 border-end p-3" style="height: 90vh; overflow-y: auto;">
-      <?php if ($selectedFilePath): ?>
+    <!-- Bên trái: Hiển thị PDF -->
+    <div class="col-md-8 border-end p-3" style="height: 90vh; overflow: auto;">
+      <?php if ($selectedFilePath && file_exists("../../" . $selectedFilePath)): ?>
         <iframe src="/websohoa/<?= $selectedFilePath ?>" style="width: 100%; height: 100%;" frameborder="0"></iframe>
       <?php else: ?>
-        <div class="alert alert-info">Vui lòng chọn file PDF để nhập liệu.</div>
+        <div class="alert alert-info">Vui lòng chọn file PDF để hiển thị nội dung.</div>
       <?php endif; ?>
     </div>
 
-    <!-- Form nhập liệu -->
+    <!-- Bên phải: Nhập liệu -->
     <div class="col-md-4 p-3">
-      <div class="card">
-        <div class="card-header"><strong>Nhập liệu</strong></div>
+      <div class="card shadow-sm">
+        <div class="card-header bg-light"><strong>Nhập liệu</strong></div>
         <div class="card-body">
-          <?php if ($selectedFilePath): ?>
+          <?php if ($selectedFilePath && $selectedScanId): ?>
           <form method="post">
             <input type="hidden" name="ten_taptin" value="<?= basename($selectedFilePath) ?>">
             <input type="hidden" name="scan_vanban_Id" value="<?= $selectedScanId ?>">
@@ -142,7 +149,7 @@ foreach ($scan as $item) {
             </div>
           </form>
           <?php else: ?>
-            <div class="alert alert-warning">Vui lòng chọn file PDF trước khi nhập liệu.</div>
+            <div class="alert alert-warning">Vui lòng chọn file để nhập liệu.</div>
           <?php endif; ?>
         </div>
       </div>
