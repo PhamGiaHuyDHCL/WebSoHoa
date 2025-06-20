@@ -52,14 +52,16 @@ class ImportModel {
         if ($phong !== '') $where .= " AND s.id_phong = " . intval($phong);
         if ($ma_muc_luc !== '') $where .= " AND s.id_mucluc = '" . $this->conn->real_escape_string($ma_muc_luc) . "'";
 
-        $allowedCols = ['id', 'khoi', 'tenphong', 'id_mucluc', 'hop_ho_so', 'khoa', 'folder_name', 'scan_user', 'ngay_nhap'];
+        $allowedCols = ['id', 'khoi', 'tenphong', 'id_mucluc', 'hop_ho_so', 'khoa', 'folder_name', 'HoTen', 'ngay_nhap'];
         $sortBy = in_array($sortBy, $allowedCols) ? $sortBy : 'id';
         $sortDir = strtoupper($sortDir) === 'ASC' ? 'ASC' : 'DESC';
         $sortColumn = ($sortBy === 'tenphong') ? 'p.tenphong' : "s.$sortBy";
 
-        $sql = "SELECT s.*, p.tenphong 
+        $sql = "SELECT s.*, p.tenphong, nv.HoTen AS TenNguoiScan
                 FROM scan_hoso s 
                 LEFT JOIN phong p ON s.id_phong = p.id 
+                LEFT JOIN taikhoan tk ON s.scan_user = tk.ID
+                LEFT JOIN nhanvien nv ON tk.IDNhanVien = nv.ID
                 $where 
                 ORDER BY $sortColumn $sortDir 
                 LIMIT ?, ?";
@@ -114,10 +116,29 @@ class ImportModel {
             return false;
         }
     }
-            public function deleteByIds(array $ids) {
+    public function deleteByIds(array $ids) {
         if (empty($ids)) return;
+
         $placeholders = implode(',', array_fill(0, count($ids), '?'));
-        $stmt = $this->conn->prepare("DELETE FROM scan_hoso WHERE id IN ($placeholders)");
-        $stmt->execute($ids);
-        }
+        $types = str_repeat('i', count($ids));
+
+        // 1. Xoá bản ghi liên quan trong ds_vanban
+        $sql1 = "DELETE FROM ds_vanban WHERE scan_vanban_Id IN ($placeholders)";
+        $stmt1 = $this->conn->prepare($sql1);
+        $stmt1->bind_param($types, ...$ids);
+        $stmt1->execute();
+
+        // 2. Xoá bản ghi liên quan trong ds_hoso
+        $sql2 = "DELETE FROM ds_hoso WHERE scan_hoso_id IN ($placeholders)";
+        $stmt2 = $this->conn->prepare($sql2);
+        $stmt2->bind_param($types, ...$ids);
+        $stmt2->execute();
+
+        // 3. Cuối cùng xoá bản ghi trong scan_hoso
+        $sql3 = "DELETE FROM scan_hoso WHERE id IN ($placeholders)";
+        $stmt3 = $this->conn->prepare($sql3);
+        $stmt3->bind_param($types, ...$ids);
+        $stmt3->execute();
+    }
+
 }

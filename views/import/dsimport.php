@@ -107,12 +107,9 @@ $totalPages = ceil($total / $filters['limit']);
           <th>Hộp</th>
           <th>Khóa</th>
           <th>Tài liệu</th>
-          <th>Người scan</th>
-          <th>Người nhập liệu</th>
-          <th>Ngày nhập</th>
+          <th>Người Scan</th>
           <th>Trạng thái</th>
-          <th>Người sửa</th>
-          <th>Ngày sửa</th>
+          <th>Ngày nhập</th>
         </tr>
       </thead>
       <tbody>
@@ -129,12 +126,9 @@ $totalPages = ceil($total / $filters['limit']);
               <td><?= htmlspecialchars($d['hop_ho_so']) ?></td>
               <td><?= htmlspecialchars($d['khoa']) ?></td>
               <td><?= htmlspecialchars($d['folder_name']) ?></td>
-              <td><?= htmlspecialchars($d['scan_user']) ?></td>
-              <td><?= htmlspecialchars($d['dataentry_user']) ?></td>
-              <td><?= htmlspecialchars($d['ngay_nhap']) ?></td>
+              <td><?= htmlspecialchars($d['TenNguoiScan']) ?></td>
               <td><?= $d['dataentry_status'] == 1 ? 'Đã nhập' : 'Chưa nhập' ?></td>
-              <td><?= htmlspecialchars($d['id_nguoisua']) ?></td>
-              <td><?= htmlspecialchars($d['ngay_sua']) ?></td>
+              <td><?= htmlspecialchars($d['ngay_nhap']) ?></td>
             </tr>
           <?php endforeach; ?>
         <?php endif; ?>
