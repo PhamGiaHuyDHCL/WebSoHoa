@@ -6,7 +6,7 @@
 <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css">
 <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
 <script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
-
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
 function editAccount(account) {
   document.getElementById('editUserId').value = account.ID;
@@ -65,4 +65,37 @@ function closeCard(btn) {
   const card = btn.closest('.card');
   card.style.display = 'none';
 }
+  <!-- Scripts -->
+
+    const ctx = document.getElementById('chartCanvas').getContext('2d');
+    new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: <?= json_encode($chart_labels) ?>,
+            datasets: [{
+                label: 'Số lượng đã nhập',
+                data: <?= json_encode($chart_data) ?>,
+                backgroundColor: '#198754'
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: { legend: { display: false } },
+            scales: { y: { beginAtZero: true } }
+        }
+    });
+
+    function toggleAll(source) {
+        document.querySelectorAll('.file-check').forEach(cb => cb.checked = source.checked);
+    }
+
+<style>
+    .card-stat {
+        transition: transform 0.2s ease;
+    }
+    .card-stat:hover {
+        transform: scale(1.05);
+    }
+</style>
+
 </script>
