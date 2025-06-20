@@ -13,6 +13,44 @@ if ($conn->connect_error) {
 
 $msg = '';
 
+// Xử lý xóa tài khoản
+if (isset($_GET['delete_id'])) {
+    $id = (int)$_GET['delete_id'];
+    $conn->begin_transaction();
+    try {
+        // Lấy IDNhanVien từ taikhoan
+        $stmt = $conn->prepare("SELECT IDNhanVien FROM taikhoan WHERE ID = ?");
+        $stmt->bind_param("i", $id);
+        $stmt->execute();
+        $stmt->bind_result($idnv);
+        $stmt->fetch();
+        $stmt->close();
+
+        if ($idnv) {
+            // Xóa tài khoản
+            $stmt_tk = $conn->prepare("DELETE FROM taikhoan WHERE ID = ?");
+            $stmt_tk->bind_param("i", $id);
+            $stmt_tk->execute();
+            $stmt_tk->close();
+
+            // Xóa nhân viên
+            $stmt_nv = $conn->prepare("DELETE FROM nhanvien WHERE ID = ?");
+            $stmt_nv->bind_param("i", $idnv);
+            $stmt_nv->execute();
+            $stmt_nv->close();
+
+            $conn->commit();
+            $msg = 'delete_success';
+        } else {
+            $conn->rollback();
+            $msg = 'delete_fail';
+        }
+    } catch (Exception $e) {
+        $conn->rollback();
+        $msg = 'delete_fail';
+    }
+}
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // ✅ Xử lý CHỈNH SỬA tài khoản
     if (isset($_POST['edit_id'])) {
@@ -165,7 +203,9 @@ $result = $conn->query($sql);
       'missing' => ['danger', '❌ Vui lòng điền đầy đủ thông tin!'],
       'error' => ['danger', '❌ Lỗi xảy ra, vui lòng thử lại.'],
       'edit_success' => ['success', '✔️ Chỉnh sửa tài khoản thành công!'],
-      'edit_fail' => ['danger', '❌ Lỗi khi chỉnh sửa tài khoản!']
+      'edit_fail' => ['danger', '❌ Lỗi khi chỉnh sửa tài khoản!'],
+      'delete_success' => ['success', '✔️ Xóa tài khoản thành công!'],
+      'delete_fail' => ['danger', '❌ Lỗi khi xóa tài khoản!']
     ];
     list($type, $text) = $alerts[$msg];
     ?>
@@ -228,7 +268,7 @@ $result = $conn->query($sql);
                   echo "<td>$descBadge</td>";
                   echo "<td class='action-btns'>
                           <a href='#' onclick='editAccount(" . json_encode($row) . ")'><i class='bi bi-pencil-fill text-warning'></i></a>
-                          <a href='delete_taikhoan.php?id={$row["ID"]}' onclick=\"return confirm('Bạn có chắc chắn muốn xóa tài khoản này không?')\">
+                          <a href='?delete_id={$row["ID"]}' onclick=\"return confirm('Bạn có chắc chắn muốn xóa tài khoản này không?')\">
                             <i class='bi bi-trash-fill text-danger'></i>
                           </a>
                         </td>";
