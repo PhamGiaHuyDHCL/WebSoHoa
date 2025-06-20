@@ -4,7 +4,7 @@ require_once '../../models/KhoiDangModel.php';
 
 $model = new KhoiDangModel();
 
-// Lấy danh sách file đã scan
+// Lấy danh sách file đã scan từ bảng scan_hoso
 $scan = $model->getScanHoSoList();
 
 // Danh mục khác
@@ -19,17 +19,16 @@ $selectedFilePath = $_GET['file'] ?? '';
 $selectedScanId = null;
 $mucLucInfo = null;
 
-// Tìm file được chọn
+// Tìm file được chọn (so sánh theo 'path' trong scan_hoso)
 foreach ($scan as $item) {
-    $generatedPath = "uploads/{$item['ma_phong']}/{$item['khoa']}/{$item['hop_ho_so']}/{$item['ten_taptin']}";
-    if ($generatedPath === $selectedFilePath) {
+    if ($item['path'] === $selectedFilePath) {
         $selectedScanId = $item['id'];
         $mucLucInfo = $item;
         break;
     }
 }
 ?>
-
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 <div class="container-fluid">
   <!-- Header -->
   <div class="d-flex justify-content-between p-3 border-bottom bg-light">
@@ -39,11 +38,9 @@ foreach ($scan as $item) {
         <label class="form-label fw-bold mb-0">Chọn file PDF:</label>
         <select name="file" class="form-select d-inline w-auto" onchange="this.form.submit()">
           <option value="">-- Chọn file PDF --</option>
-          <?php foreach ($scan as $file): 
-            $generatedPath = "uploads/{$file['ma_phong']}/{$file['khoa']}/{$file['hop_ho_so']}/{$file['ten_taptin']}";
-          ?>
-            <option value="<?= $generatedPath ?>" <?= ($generatedPath === $selectedFilePath) ? 'selected' : '' ?>>
-              <?= $file['folder_name'] ?> <?= $file['dataentry_status'] == 2 ? '✅' : '' ?>
+          <?php foreach ($scan as $file): ?>
+            <option value="<?= htmlspecialchars($file['path']) ?>" <?= ($file['path'] === $selectedFilePath ? 'selected' : '') ?>>
+              <?= htmlspecialchars($file['folder_name']) ?> <?= $file['dataentry_status'] == 2 ? '✅' : '' ?>
             </option>
           <?php endforeach; ?>
         </select>
@@ -54,16 +51,81 @@ foreach ($scan as $item) {
     </div>
   </div>
 
-  <!-- Nội dung -->
-  <div class="row g-0">
-    <!-- Bên trái: Hiển thị PDF -->
-    <div class="col-md-8 border-end p-3" style="height: 90vh; overflow: auto;">
-      <?php if ($selectedFilePath && file_exists("../../" . $selectedFilePath)): ?>
-        <iframe src="/websohoa/<?= $selectedFilePath ?>" style="width: 100%; height: 100%;" frameborder="0"></iframe>
-      <?php else: ?>
-        <div class="alert alert-info">Vui lòng chọn file PDF để hiển thị nội dung.</div>
-      <?php endif; ?>
-    </div>
+      <!-- Nội dung -->
+      <div class="col-md-8 border-end p-3" style="height: 90vh; overflow: auto;">
+        <?php
+          $webPath = "/websohoa1/" . $selectedFilePath;
+          $filePath = $_SERVER['DOCUMENT_ROOT'] . $webPath;
+          $ext = strtolower(pathinfo($selectedFilePath, PATHINFO_EXTENSION));
+        ?>
+
+        <?php if ($selectedFilePath && file_exists($filePath)): ?>
+          <?php if (in_array($ext, ['jpg', 'jpeg', 'png', 'gif', 'bmp', 'webp'])): ?>
+            <!-- Ảnh thì hiển thị kèm zoom -->
+            <div style="overflow: hidden;">
+              <img id="zoom-img" src="<?= $webPath ?>" style="max-width: 100%; height: auto; cursor: grab;" />
+            </div>
+            <div class="mt-2 text-center">
+              <button onclick="imgPanzoom.zoomIn()">➕</button>
+              <button onclick="imgPanzoom.zoomOut()">➖</button>
+            </div>
+
+            <script src="https://unpkg.com/@panzoom/panzoom@4.5.1/dist/panzoom.min.js"></script>
+            <script>
+              const imgPanzoom = Panzoom(document.getElementById('zoom-img'), { maxScale: 5, minScale: 0.5 });
+              document.getElementById('zoom-img').parentElement.addEventListener('wheel', imgPanzoom.zoomWithWheel);
+            </script>
+          <?php elseif ($ext === 'pdf'): ?>
+            <!-- PDF thì dùng canvas để hiển thị như ảnh -->
+            <canvas id="pdf-canvas" style="border: none;"></canvas>
+            <div class="mt-2 text-center">
+              <button onclick="pdfZoomIn()">➕</button>
+              <button onclick="pdfZoomOut()">➖</button>
+            </div>
+
+            <script>
+              let pdfDoc = null, pageNum = 1, pdfScale = 1.5;
+              const canvas = document.getElementById('pdf-canvas');
+              const ctx = canvas.getContext('2d');
+
+              function renderPage(num) {
+                pdfDoc.getPage(num).then(page => {
+                  const viewport = page.getViewport({ scale: pdfScale });
+                  canvas.height = viewport.height;
+                  canvas.width = viewport.width;
+
+                  const renderContext = {
+                    canvasContext: ctx,
+                    viewport: viewport
+                  };
+                  page.render(renderContext);
+                });
+              }
+
+              function pdfZoomIn() {
+                pdfScale += 0.25;
+                renderPage(pageNum);
+              }
+
+              function pdfZoomOut() {
+                pdfScale = Math.max(0.5, pdfScale - 0.25);
+                renderPage(pageNum);
+              }
+
+              pdfjsLib.getDocument("<?= $webPath ?>").promise.then(pdf => {
+                pdfDoc = pdf;
+                renderPage(pageNum);
+              });
+            </script>
+          <?php else: ?>
+            <div class="alert alert-warning">Định dạng file không hỗ trợ hiển thị: <?= htmlspecialchars($ext) ?></div>
+          <?php endif; ?>
+        <?php else: ?>
+          <div class="alert alert-info">Vui lòng chọn file để hiển thị nội dung.</div>
+        <?php endif; ?>
+      </div>
+
+
 
     <!-- Bên phải: Nhập liệu -->
     <div class="col-md-4 p-3">
