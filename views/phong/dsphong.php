@@ -1,5 +1,7 @@
-<?php include '../layouts/header.php'; ?>
 <?php
+ob_start(); // Bật output buffering để tránh lỗi header
+include '../layouts/header.php'; 
+
 // Kết nối cơ sở dữ liệu
 $servername = "127.0.0.1";
 $username = "root";
@@ -23,104 +25,8 @@ try {
     die("Truy vấn thất bại: " . $e->getMessage());
 }
 
-// Xử lý thêm phông mới
-if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['add_phong'])) {
-    $maPhong = trim($_POST['maPhong']);
-    $tenPhong = trim($_POST['tenPhong']);
-    
-    // Khởi tạo mảng lưu trữ lỗi
-    $errors = [];
-
-    // Ràng buộc 1: Kiểm tra trường không được để trống
-    if (empty($maPhong)) {
-        $errors[] = "Mã phòng không được để trống!";
-    }
-    
-    if (empty($tenPhong)) {
-        $errors[] = "Tên phòng không được để trống!";
-    }
-
-    // Ràng buộc 2: Kiểm tra độ dài
-    if (strlen($maPhong) > 10) { // Giả sử mã phòng tối đa 10 ký tự
-        $errors[] = "Mã phòng không được vượt quá 10 ký tự!";
-    }
-    
-    if (strlen($tenPhong) > 50) { // Giả sử tên phòng tối đa 50 ký tự
-        $errors[] = "Tên phòng không được vượt quá 50 ký tự!";
-    }
-
-    // Ràng buộc 3: Kiểm tra định dạng mã phòng (chỉ chấp nhận chữ cái, số và gạch dưới)
-    if (!preg_match('/^[a-zA-Z0-9_]+$/', $maPhong)) {
-        $errors[] = "Mã phòng chỉ được chứa chữ cái, số và gạch dưới!";
-    }
-
-    // Ràng buộc 4: Kiểm tra tên phòng không chứa ký tự đặc biệt nguy hiểm
-    if (preg_match('/[<>"\']/', $tenPhong)) {
-        $errors[] = "Tên phòng không được chứa ký tự đặc biệt như <, >, \", '!";
-    }
-
-    // Nếu không có lỗi, tiến hành xử lý database
-    if (empty($errors)) {
-        try {
-            // Kiểm tra xem MaPhong đã tồn tại chưa
-            $checkStmt = $conn->prepare("SELECT COUNT(*) FROM phong WHERE MaPhong = :maPhong");
-            $checkStmt->bindParam(':maPhong', $maPhong);
-            $checkStmt->execute();
-            
-            if ($checkStmt->fetchColumn() > 0) {
-                $errors[] = "Mã phòng đã tồn tại!";
-            } else {
-                // Thêm mới phòng
-                $stmt = $conn->prepare("INSERT INTO phong (MaPhong, TenPhong) VALUES (:maPhong, :tenPhong)");
-                $stmt->bindParam(':maPhong', $maPhong);
-                $stmt->bindParam(':tenPhong', $tenPhong);
-                $stmt->execute();
-                
-                // Refresh page to show updated list
-                header("Location: " . $_SERVER['PHP_SELF']);
-                exit();
-            }
-        } catch (PDOException $e) {
-            $errors[] = "Lỗi thêm phòng: " . $e->getMessage();
-        }
-    }
-
-    // Hiển thị thông báo lỗi nếu có
-    if (!empty($errors)) {
-        foreach ($errors as $error) {
-            echo "<p style='color: red;'>$error</p>";
-        }
-    }
-}
-
-// Xử lý cập nhật phông
-if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['edit_phong'])) {
-    $id = $_POST['id'];
-    $maPhong = $_POST['maPhong'];
-    $tenPhong = $_POST['tenPhong'];
-
-    try {
-        // Kiểm tra trùng MaPhong, nhưng bỏ qua bản ghi hiện tại
-        $checkStmt = $conn->prepare("SELECT COUNT(*) FROM phong WHERE MaPhong = :maPhong AND ID != :id");
-        $checkStmt->bindParam(':maPhong', $maPhong);
-        $checkStmt->bindParam(':id', $id);
-        $checkStmt->execute();
-        if ($checkStmt->fetchColumn() > 0) {
-            die("Lỗi: Mã phông đã tồn tại!");
-        }
-
-        $stmt = $conn->prepare("UPDATE phong SET MaPhong = :maPhong, TenPhong = :tenPhong WHERE ID = :id");
-        $stmt->bindParam(':id', $id);
-        $stmt->bindParam(':maPhong', $maPhong);
-        $stmt->bindParam(':tenPhong', $tenPhong);
-        $stmt->execute();
-        // Refresh page to show updated list
-        header("Location: " . $_SERVER['PHP_SELF']);
-        exit();
-    } catch (PDOException $e) {
-        die("Lỗi cập nhật phông: " . $e->getMessage());
-    }
-}
+// Chống cache để đảm bảo danh sách luôn mới
+header("Cache-Control: no-cache, must-revalidate");
 ?>
 
 <!DOCTYPE html>
@@ -134,6 +40,31 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['edit_phong'])) {
 </head>
 <body>
 <div class="container-fluid px-4">
+  <?php
+  // Hiển thị thông báo từ add_phong.php hoặc edit_phong.php
+  if (isset($_GET['status'])) {
+      if ($_GET['status'] === 'add_success') {
+          echo '<div class="alert alert-success alert-dismissible fade show" role="alert">
+                  Thêm phông thành công!
+                  <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>';
+      } elseif ($_GET['status'] === 'edit_success') {
+          echo '<div class="alert alert-success alert-dismissible fade show" role="alert">
+                  Sửa phông thành công!
+                  <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>';
+      } elseif ($_GET['status'] === 'error' && isset($_GET['errors'])) {
+          $errors = explode('|', urldecode($_GET['errors']));
+          foreach ($errors as $error) {
+              echo "<div class='alert alert-danger alert-dismissible fade show' role='alert'>
+                      $error
+                      <button type='button' class='btn-close' data-bs-dismiss='alert' aria-label='Close'></button>
+                    </div>";
+          }
+      }
+  }
+  ?>
+
   <div class="card mt-4">
     <div class="card-header d-flex justify-content-between align-items-center">
       <h5 class="mb-0">Danh mục phông</h5>
@@ -185,13 +116,13 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['edit_phong'])) {
         </tbody>
       </table>
 
-      <p class="mt-3">Hiển thị 1 - <?php echo $totalRecords; ?> của <?php echo $totalRecords; ?> phông</p>
+      <p class="mt-3" id="recordInfo">Hiển thị 1 - <?php echo $totalRecords; ?> của <?php echo $totalRecords; ?> phông</p>
     </div>
   </div>
 </div>
 
 <!-- Modal for adding new room -->
-<div class="modal fade" id="addPhongModal" tabindex="-1" aria-labelledby="addPhongModalLabel" aria-hidden="true">
+<div class="modal fade" id="addPhongModal" tabindex="-1" aria-labelledby="addPhongModalLabel" aria-label="true">
   <div class="modal-dialog">
     <div class="modal-content">
       <div class="modal-header">
@@ -199,7 +130,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['edit_phong'])) {
         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
       <div class="modal-body">
-        <form method="POST" action="">
+        <form method="POST" action="add_phong.php">
           <div class="mb-3">
             <label for="maPhong" class="form-label">Mã phông *</label>
             <input type="text" class="form-control" id="maPhong" name="maPhong" required>
@@ -217,7 +148,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['edit_phong'])) {
 </div>
 
 <!-- Modal for editing room -->
-<div class="modal fade" id="editPhongModal" tabindex="-1" aria-labelledby="editPhongModalLabel" aria-hidden="true">
+<div class="modal fade" id="editPhongModal" tabindex="-1" aria-labelledby="editPhongModalLabel" aria-label="true">
   <div class="modal-dialog">
     <div class="modal-content">
       <div class="modal-header">
@@ -225,7 +156,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['edit_phong'])) {
         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
       <div class="modal-body">
-        <form method="POST" action="">
+        <form method="POST" action="edit_phong.php">
           <input type="hidden" id="editId" name="id">
           <div class="mb-3">
             <label for="editMaPhong" class="form-label">Mã phông *</label>
@@ -244,7 +175,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['edit_phong'])) {
 </div>
 
 <!-- Modal confirm delete -->
-<div class="modal fade" id="confirmDeleteModal" tabindex="-1" aria-labelledby="confirmDeleteModalLabel" aria-hidden="true">
+<div class="modal fade" id="confirmDeleteModal" tabindex="-1" aria-labelledby="confirmDeleteModalLabel" aria-label="true">
   <div class="modal-dialog">
     <div class="modal-content">
       <div class="modal-header">
@@ -266,14 +197,18 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['edit_phong'])) {
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script>
+  // Handle search
   const searchInput = document.getElementById('searchBox');
   searchInput.addEventListener('input', function () {
     const value = this.value.toLowerCase();
     const rows = document.querySelectorAll("#danhmucTable tbody tr");
+    let visibleCount = 0;
     rows.forEach(row => {
       const text = row.innerText.toLowerCase();
       row.style.display = text.includes(value) ? '' : 'none';
+      if (text.includes(value)) visibleCount++;
     });
+    document.getElementById('recordInfo').innerText = `Hiển thị 1 - ${visibleCount} của ${rows.length} phông`;
   });
 
   // Handle edit modal
@@ -316,12 +251,29 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['edit_phong'])) {
                 </div>
               `);
               setTimeout(() => $('.alert-success').alert('close'), 3000); // Tự động ẩn sau 3 giây
+              // Update record info
+              const rows = document.querySelectorAll("#danhmucTable tbody tr");
+              const visibleRows = Array.from(rows).filter(row => row.style.display !== 'none');
+              document.getElementById('recordInfo').innerText = `Hiển thị 1 - ${visibleRows.length} của ${rows.length} phông`;
             } else {
-              alert('Xóa thất bại: ' + response);
+              $('.container-fluid').prepend(`
+                <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                  Xóa thất bại: ${response}
+                  <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+              `);
+              setTimeout(() => $('.alert-danger').alert('close'), 3000);
             }
           },
           error: function(xhr, status, error) {
-            alert('Lỗi: ' + error);
+            console.log('AJAX Error:', xhr.responseText, status, error);
+            $('.container-fluid').prepend(`
+              <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                Lỗi: ${xhr.responseText || error}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+              </div>
+            `);
+            setTimeout(() => $('.alert-danger').alert('close'), 3000);
           }
         });
       });
@@ -330,3 +282,4 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['edit_phong'])) {
 </script>
 </body>
 </html>
+<?php ob_end_flush(); ?>
