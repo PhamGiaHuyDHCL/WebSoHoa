@@ -71,9 +71,9 @@ $totalPages = ceil($total / $filters['limit']);
       </select>
     </div>
     <div class="col-md-2">
-      <label class="form-label">Phòng</label>
+      <label class="form-label">Phông</label>
       <select name="phong" class="form-select">
-        <option value="">Tất cả phòng</option>
+        <option value="">Tất cả phông</option>
         <?php foreach ($phongs as $p): ?>
           <option value="<?= (int)$p['id'] ?>" <?= $filters['phong'] == $p['id'] ? 'selected' : '' ?>>
             <?= htmlspecialchars($p['tenphong']) ?>
@@ -167,9 +167,9 @@ $totalPages = ceil($total / $filters['limit']);
             </select>
           </div>
           <div class="mb-3">
-            <label class="form-label">Phòng</label>
+            <label class="form-label">Phông</label>
             <select name="phong" class="form-select" required>
-              <option value="">Chọn phòng</option>
+              <option value="">Chọn phông</option>
               <?php foreach ($phongs as $p): ?>
                 <option value="<?= (int)$p['id'] ?>"><?= htmlspecialchars($p['tenphong']) ?></option>
               <?php endforeach; ?>
