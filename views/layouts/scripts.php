@@ -7,21 +7,8 @@
 <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
 <script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
 <script>
-function editAccount(account) {
-  document.getElementById('editUserId').value = account.ID;
-  document.getElementById('editHoTen').value = account.HoTen;
-  document.getElementById('editSdt').value = account.SoDienThoai;
-  document.getElementById('editCccd').value = account.CCCD;
-  document.getElementById('editTaiKhoan').value = account.TaiKhoan;
-
-  const quyenMap = <?= json_encode(array_column($roles, 'ID', 'role_name')) ?>;
-  document.getElementById('editQuyen').value = quyenMap[account.Quyen] || '';
-  document.getElementById('editMatKhau').value = '';
-
-  const modal = new bootstrap.Modal(document.getElementById('editAccountModal'));
-  modal.show();
-}
 
 $(document).ready(function () {
   $('#accountTable').DataTable({
@@ -65,38 +52,6 @@ function closeCard(btn) {
   const card = btn.closest('.card');
   card.style.display = 'none';
 }
-  <!-- Scripts -->
-
-    const ctx = document.getElementById('chartCanvas').getContext('2d');
-    new Chart(ctx, {
-        type: 'bar',
-        data: {
-            labels: <?= json_encode($chart_labels) ?>,
-            datasets: [{
-                label: 'Số lượng đã nhập',
-                data: <?= json_encode($chart_data) ?>,
-                backgroundColor: '#198754'
-            }]
-        },
-        options: {
-            responsive: true,
-            plugins: { legend: { display: false } },
-            scales: { y: { beginAtZero: true } }
-        }
-    });
-
-    function toggleAll(source) {
-        document.querySelectorAll('.file-check').forEach(cb => cb.checked = source.checked);
-    }
-
-<style>
-    .card-stat {
-        transition: transform 0.2s ease;
-    }
-    .card-stat:hover {
-        transform: scale(1.05);
-    }
-</style>
 
 </script>
 <script>
@@ -107,4 +62,66 @@ document.addEventListener('hidden.bs.modal', function () {
   document.body.style.overflow = '';
 });
 </script>
+<script>
+function editAccount(account) {
+  const modalEl = document.getElementById('editAccountModal');
+  const form = modalEl.querySelector('form');
+
+  // Reset form trước khi gán dữ liệu mới
+  form.reset();
+
+  // Đổ dữ liệu vào form
+  document.getElementById('editUserId').value = account.ID || '';
+  document.getElementById('editHoTen').value = account.HoTen || '';
+  document.getElementById('editSdt').value = account.SoDienThoai || '';
+  document.getElementById('editCccd').value = account.CCCD || '';
+  document.getElementById('editTaiKhoan').value = account.TaiKhoan || '';
+  document.getElementById('editQuyen').value = account.QuyenID || '';
+  document.getElementById('editMatKhau').value = ''; // không hiển thị mật khẩu cũ
+
+  // Mở modal
+  const modal = new bootstrap.Modal(modalEl);
+  modal.show();
+}
+
+// Reset form khi đóng modal để tránh giữ dữ liệu cũ
+document.getElementById('editAccountModal').addEventListener('hidden.bs.modal', function () {
+  this.querySelector('form').reset();
+});
+</script>
+<!-- CSS -->
+<style>
+.card-stat {
+    transition: transform 0.2s ease;
+}
+.card-stat:hover {
+    transform: scale(1.05);
+}
+</style>
+
+<!-- JS -->
+<script>
+const ctx = document.getElementById('chartCanvas').getContext('2d');
+new Chart(ctx, {
+    type: 'bar',
+    data: {
+        labels: <?= json_encode($chart_labels) ?>,
+        datasets: [{
+            label: 'Số lượng đã nhập',
+            data: <?= json_encode($chart_data) ?>,
+            backgroundColor: '#198754'
+        }]
+    },
+    options: {
+        responsive: true,
+        plugins: { legend: { display: false } },
+        scales: { y: { beginAtZero: true } }
+    }
+});
+
+function toggleAll(source) {
+    document.querySelectorAll('.file-check').forEach(cb => cb.checked = source.checked);
+}
+</script>
+
 
