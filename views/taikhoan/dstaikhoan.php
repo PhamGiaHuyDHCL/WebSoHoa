@@ -87,10 +87,9 @@ if (!empty($msg) && isset($alerts[$msg])) {
                   ?>
                 </td>
                 <td class='action-btns'>
-                   <a href="edit_taikhoan.php" data-bs-toggle="modal" data-bs-target="#editAccountModal" onclick='editAccount(<?= json_encode($row) ?>)'>
-                         <i class='bi bi-pencil-fill text-warning'></i>
+                  <a href="javascript:void(0)" data-bs-toggle="modal" data-bs-target="#editAccountModal" onclick='editAccount(<?= json_encode($row) ?>)'>
+                     <i class='bi bi-pencil-fill text-warning'></i>
                     </a>
-
                   <a href='delete_taikhoan.php?id=<?= $row["ID"] ?>' onclick="return confirm('Bạn có chắc chắn muốn xóa tài khoản này không?')">
                     <i class='bi bi-trash-fill text-danger'></i>
                   </a>
