@@ -99,3 +99,12 @@ function closeCard(btn) {
 </style>
 
 </script>
+<script>
+document.addEventListener('hidden.bs.modal', function () {
+  const backdrops = document.querySelectorAll('.modal-backdrop');
+  backdrops.forEach(b => b.remove());
+  document.body.classList.remove('modal-open');
+  document.body.style.overflow = '';
+});
+</script>
+
