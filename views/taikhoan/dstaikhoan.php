@@ -1,6 +1,5 @@
 <?php
 session_start();
-$currentUserId = $_SESSION['user_id'] ?? null;
 include_once '../../config/dbadmin.php';
 include_once '../../models/TaiKhoanModel.php';
 include_once '../../controllers/TaiKhoanController.php';
