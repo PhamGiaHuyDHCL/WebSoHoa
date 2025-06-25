@@ -1,8 +1,12 @@
 <?php
+session_start();
+$currentUserId = $_SESSION['user_id'] ?? null;
 include_once '../../config/dbadmin.php';
 include_once '../../models/TaiKhoanModel.php';
 include_once '../../controllers/TaiKhoanController.php';
 include_once '../layouts/header.php';
+
+
 
 $alerts = [
     'success' => ['success', '✔ Tạo tài khoản thành công!'],
@@ -87,13 +91,26 @@ if (!empty($msg) && isset($alerts[$msg])) {
                   ?>
                 </td>
                 <td class='action-btns'>
-                  <a href="javascript:void(0)" data-bs-toggle="modal" data-bs-target="#editAccountModal" onclick='editAccount(<?= json_encode($row) ?>)'>
-                     <i class='bi bi-pencil-fill text-warning'></i>
+                    <!-- Nút sửa -->
+                    <a href="javascript:void(0)" data-bs-toggle="modal" data-bs-target="#editAccountModal"
+                       onclick='editAccount(<?= json_encode($row) ?>)'
+                       class="me-2" title="Chỉnh sửa">
+                        <i class='bi bi-pencil-fill text-warning'></i>
                     </a>
-                  <a href='delete_taikhoan.php?id=<?= $row["ID"] ?>' onclick="return confirm('Bạn có chắc chắn muốn xóa tài khoản này không?')">
-                    <i class='bi bi-trash-fill text-danger'></i>
-                  </a>
+
+                    <!-- Nút xóa nếu không phải tài khoản đang đăng nhập -->
+                    <?php if ($row['ID'] != $_SESSION['taikhoan_id']): ?>
+                        <a href="delete_taikhoan.php?id=<?= $row['ID'] ?>"
+                           onclick="return confirm('Bạn có chắc chắn muốn xóa tài khoản này không?')"
+                           title="Xóa">
+                            <i class='bi bi-trash-fill text-danger'></i>
+                        </a>
+                    <?php else: ?>
+                        <!-- Icon thùng rác bị ẩn hoặc mờ để không cho xóa -->
+                        <i class='bi bi-trash-fill text-muted' title="Không thể xóa chính bạn"></i>
+                    <?php endif; ?>
                 </td>
+
               </tr>
             <?php endwhile; ?>
           <?php else: ?>
