@@ -1,6 +1,5 @@
 <?php
 session_start();
-$currentUserId = $_SESSION['user_id'] ?? null;
 
 $host = 'localhost';
 $user = 'root';
