@@ -13,7 +13,7 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 
 if (!isset($_FILES['pdf_files'])) {
     $_SESSION['upload_error'] = 'Chưa chọn file PDF.';
-    header("Location: views/import/dsimport.php");
+    header("Location: ../views/import/dsimport.php");
     exit;
 }
 
@@ -88,5 +88,5 @@ if ($errors) {
     $_SESSION['upload_error'] = implode(" | ", $errors);
 }
 
-header("Location: views/import/dsimport.php");
+header("Location: ../views/import/dsimport.php");
 exit;
