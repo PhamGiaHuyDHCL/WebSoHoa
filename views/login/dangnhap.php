@@ -32,7 +32,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $_SESSION['taikhoan_id'] = $row['ID'];
             $_SESSION['username'] = $row['TaiKhoan'];
             $_SESSION['phanquyen_id'] = $row['IDPhanQuyen']; // Lưu quyền để xử lý hiển thị sidebar
-            $_SESSION['user_id'] = $row['ID'];
 
             header("Location: ../../index.php");
             exit;
