@@ -6,7 +6,6 @@ class TaiKhoanModel {
         $this->conn = $conn;
     }
 
-    // Lấy tất cả quyền người dùng
     public function getAllRoles() {
         $roles = [];
         $res = $this->conn->query("SELECT ID, role_name FROM phanquyen");
@@ -14,10 +13,9 @@ class TaiKhoanModel {
         return $roles;
     }
 
-    // Lấy danh sách tài khoản và thông tin liên quan
     public function getAllAccounts() {
         $sql = "
-            SELECT tk.ID, tk.TaiKhoan, nv.HoTen, nv.CCCD, nv.SoDienThoai, pq.role_name AS Quyen, pq.MoTa
+            SELECT tk.ID, tk.TaiKhoan, nv.HoTen, nv.CCCD, nv.SoDienThoai, pq.role_name AS Quyen, pq.MoTa, pq.ID AS QuyenID
             FROM taikhoan tk
             JOIN phanquyen pq ON pq.ID = tk.IDPhanQuyen
             JOIN nhanvien nv ON nv.ID = tk.IDNhanVien
@@ -25,19 +23,21 @@ class TaiKhoanModel {
         return $this->conn->query($sql);
     }
 
-    // Kiểm tra CCCD đã tồn tại (khi thêm hoặc sửa)
     public function checkCCCDExist($cccd, $exceptId = null) {
         $sql = $exceptId
             ? "SELECT ID FROM nhanvien WHERE CCCD = ? AND ID != (SELECT IDNhanVien FROM taikhoan WHERE ID = ?)"
             : "SELECT ID FROM nhanvien WHERE CCCD = ?";
         $stmt = $this->conn->prepare($sql);
-        $exceptId ? $stmt->bind_param("si", $cccd, $exceptId) : $stmt->bind_param("s", $cccd);
+        if ($exceptId) {
+            $stmt->bind_param("si", $cccd, $exceptId);
+        } else {
+            $stmt->bind_param("s", $cccd);
+        }
         $stmt->execute();
         $stmt->store_result();
         return $stmt->num_rows > 0;
     }
 
-    // Thêm tài khoản mới
     public function addAccount($data) {
         $this->conn->begin_transaction();
         try {
@@ -61,21 +61,32 @@ class TaiKhoanModel {
         }
     }
 
-    // Cập nhật tài khoản
     public function updateAccount($id, $data) {
         $this->conn->begin_transaction();
         try {
-            $stmt_nv = $this->conn->prepare("UPDATE nhanvien SET HoTen = ?, SoDienThoai = ?, CCCD = ? WHERE ID = (SELECT IDNhanVien FROM taikhoan WHERE ID = ?)");
+            $stmt_nv = $this->conn->prepare("
+                UPDATE nhanvien 
+                SET HoTen = ?, SoDienThoai = ?, CCCD = ? 
+                WHERE ID = (SELECT IDNhanVien FROM taikhoan WHERE ID = ?)
+            ");
             $stmt_nv->bind_param("sssi", $data['hoten'], $data['sdt'], $data['cccd'], $id);
             $stmt_nv->execute();
             $stmt_nv->close();
 
             if (!empty($data['new_password'])) {
                 $hash = password_hash($data['new_password'], PASSWORD_DEFAULT);
-                $stmt = $this->conn->prepare("UPDATE taikhoan SET TaiKhoan = ?, MatKhau = ?, IDPhanQuyen = ? WHERE ID = ?");
+                $stmt = $this->conn->prepare("
+                    UPDATE taikhoan 
+                    SET TaiKhoan = ?, MatKhau = ?, IDPhanQuyen = ? 
+                    WHERE ID = ?
+                ");
                 $stmt->bind_param("ssii", $data['taikhoan'], $hash, $data['quyen'], $id);
             } else {
-                $stmt = $this->conn->prepare("UPDATE taikhoan SET TaiKhoan = ?, IDPhanQuyen = ? WHERE ID = ?");
+                $stmt = $this->conn->prepare("
+                    UPDATE taikhoan 
+                    SET TaiKhoan = ?, IDPhanQuyen = ? 
+                    WHERE ID = ?
+                ");
                 $stmt->bind_param("sii", $data['taikhoan'], $data['quyen'], $id);
             }
             $stmt->execute();
@@ -83,6 +94,39 @@ class TaiKhoanModel {
 
             $this->conn->commit();
             return true;
+        } catch (Exception $e) {
+            $this->conn->rollback();
+            return false;
+        }
+    }
+
+    public function deleteAccount($id) {
+        $this->conn->begin_transaction();
+        try {
+            $stmt = $this->conn->prepare("SELECT IDNhanVien FROM taikhoan WHERE ID = ?");
+            $stmt->bind_param("i", $id);
+            $stmt->execute();
+            $stmt->bind_result($idnv);
+            $stmt->fetch();
+            $stmt->close();
+
+            if ($idnv) {
+                $stmtDelTK = $this->conn->prepare("DELETE FROM taikhoan WHERE ID = ?");
+                $stmtDelTK->bind_param("i", $id);
+                $stmtDelTK->execute();
+                $stmtDelTK->close();
+
+                $stmtDelNV = $this->conn->prepare("DELETE FROM nhanvien WHERE ID = ?");
+                $stmtDelNV->bind_param("i", $idnv);
+                $stmtDelNV->execute();
+                $stmtDelNV->close();
+
+                $this->conn->commit();
+                return true;
+            } else {
+                $this->conn->rollback();
+                return false;
+            }
         } catch (Exception $e) {
             $this->conn->rollback();
             return false;
