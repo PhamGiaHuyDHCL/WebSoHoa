@@ -1,6 +1,7 @@
 <?php
-include '../layouts/header.php';
-require_once '../../models/KhoiDangModel.php';
+include_once '../layouts/header.php';
+require_once __DIR__ . '/../../models/KhoiDangModel.php';
+include_once '../../controllers/KhoiDangController.php';
 
 $model = new KhoiDangModel();
 $scan = $model->getScanHoSoList();
@@ -110,7 +111,8 @@ $ext = strtolower(pathinfo($selectedFilePath, PATHINFO_EXTENSION));
         <div class="card-header bg-light"><strong>Nhập liệu</strong></div>
         <div class="card-body overflow-auto">
           <?php if ($selectedFilePath && $selectedScanId): ?>
-          <form method="post" action="khoidang.php?controller=khoidang&action=saveVanBan">
+          <form method="post" action="../../index.php?controller=khoidang&action=saveVanBan">
+
             <input type="hidden" name="ten_taptin" value="<?= basename($selectedFilePath) ?>">
             <input type="hidden" name="scan_vanban_Id" value="<?= $selectedScanId ?>">
 
