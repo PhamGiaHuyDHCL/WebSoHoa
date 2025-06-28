@@ -1,4 +1,11 @@
 <?php
+if (session_status() === PHP_SESSION_NONE) session_start();
+
+if (!empty($_SESSION['success'])) {
+    echo '<div id="success-alert" class="alert alert-success text-center fw-bold">' . $_SESSION['success'] . '</div>';
+    unset($_SESSION['success']);
+    echo '<script>setTimeout(() => document.getElementById("success-alert")?.remove(), 2000);</script>';
+}
 include_once '../layouts/header.php';
 require_once __DIR__ . '/../../models/KhoiDangModel.php';
 include_once '../../controllers/KhoiDangController.php';
@@ -105,14 +112,14 @@ $ext = strtolower(pathinfo($selectedFilePath, PATHINFO_EXTENSION));
         <div class="alert alert-info m-3">Vui lòng chọn file để hiển thị nội dung.</div>
       <?php endif; ?>
     </div>
-    <!-- Bên phải: Nhập liệu -->
+
+    <!-- Nhập liệu -->
     <div class="col-md-4 p-3 d-flex flex-column">
       <div class="card shadow-sm flex-grow-1">
         <div class="card-header bg-light"><strong>Nhập liệu</strong></div>
         <div class="card-body overflow-auto">
           <?php if ($selectedFilePath && $selectedScanId): ?>
           <form method="post" action="../../index.php?controller=khoidang&action=saveVanBan">
-
             <input type="hidden" name="ten_taptin" value="<?= basename($selectedFilePath) ?>">
             <input type="hidden" name="scan_vanban_Id" value="<?= $selectedScanId ?>">
 
