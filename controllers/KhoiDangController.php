@@ -1,6 +1,8 @@
+
+
 <?php
-require_once './models/KhoiDangModel.php';
-session_start();
+require_once __DIR__ . '/../models/KhoiDangModel.php';
+require(__DIR__ . '/../views/NhapLieu/khoidang.php');
 
 class KhoiDangController {
     private $model;
@@ -14,65 +16,69 @@ class KhoiDangController {
     }
 
 public function saveVanBan() {
+    if (session_status() === PHP_SESSION_NONE) {
+        session_start();
+    }
+
     if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $userId = $_SESSION['taikhoan_id'] ?? 1;
         $now = date('Y-m-d H:i:s');
-        $tenFile = $_POST['ten_taptin'] ?? '';
 
-        // Lấy mã nhập
-        $maPhong = trim($_POST['ma_phong'] ?? '');
+        // Lấy mã từ người dùng nhập
+        $maPhong  = trim($_POST['ma_phong'] ?? '');
         $maMucLuc = trim($_POST['ma_mucluc'] ?? '');
-        $maDVBQ = trim($_POST['ma_dvbq'] ?? '');
-        $maHoSo = trim($_POST['ma_hoso'] ?? '');
+        $maDVBQ   = trim($_POST['ma_dvbq'] ?? '');
+        $maHoSo   = trim($_POST['ma_hoso'] ?? '');
+        $scanId   = intval($_POST['scan_vanban_Id'] ?? 0);
 
-        // Kiểm tra bắt buộc
         if (!$maPhong || !$maMucLuc || !$maDVBQ || !$maHoSo) {
-            echo "<script>alert('⚠️ Bạn cần nhập đầy đủ: Mã phông, mục lục, ĐVBQ, hồ sơ'); history.back();</script>";
+            echo "<script>alert('Bạn cần nhập đầy đủ các trường bắt buộc'); history.back();</script>";
             exit;
         }
 
-        // Trả ID từ mã hoặc thêm mới
-        $id_phong = $this->model->getOrInsertId('phong', 'MaPhong', 'TenPhong', $maPhong);
-        $id_mucluc = $this->model->getOrInsertId('mucluc', 'MaMucLuc', 'TenMucLuc', $maMucLuc);
-        $id_dvbq = $this->model->getOrInsertId('donvibaoquan', 'MaDVBQ', 'TenDVBQ', $maDVBQ);
+        // Lấy ID hoặc thêm mới
+        $id_phong   = $this->model->getOrInsertId('phong', 'MaPhong', 'TenPhong', $maPhong);
+        $id_mucluc  = $this->model->getOrInsertId('mucluc', 'MaMucLuc', 'TenMucLuc', $maMucLuc);
+        $id_dvbq    = $this->model->getOrInsertId('donvibaoquan', 'MaDVBQ', 'TenDVBQ', $maDVBQ);
 
-        // Lấy scanId nếu có
-        $scanId = $_POST['scan_vanban_Id'] ?? null;
-
-        // Chuẩn bị dữ liệu lưu
+        // Gói dữ liệu KHÔNG DẤU :
         $data = [
-            ':ten_taptin' => $tenFile,
-            ':scan_vanban_Id' => $scanId,
-            ':id_phong' => $id_phong,
-            ':id_mucluc' => $id_mucluc,
-            ':id_dvbq' => $id_dvbq,
-            ':ma_hoso' => $_POST['ma_hoso'] ?? '',
-            ':so_vanban' => $_POST['so_vanban'] ?? '',
-            ':trich_yeu' => $_POST['trich_yeu'] ?? '',
-            ':ngay_thang_nam_vanban' => $_POST['ngay_thang_nam_vanban'] ?? null,
-            ':id_do_mat' => $_POST['id_do_mat'] ?? null,
-            ':tacgia_vanban' => $_POST['tacgia_vanban'] ?? '',
-            ':id_theloaivanban_fk' => $_POST['id_theloaivanban_fk'] ?? null,
-            ':sotrang_vanban' => $_POST['sotrang_vanban'] ?? 1,
-            ':so_thutu' => $_POST['so_thutu'] ?? '',
-            ':nguoi_ky' => $_POST['nguoi_ky'] ?? '',
-            ':trang_so' => $_POST['trang_so'] ?? '',
-            ':dataentry_status' => 2,
-            ':id_nguoisua' => $userId,
-            ':ngay_sua' => $now,
-            ':ngay_tao' => $now,
+            'id_phong' => $id_phong,
+            'id_mucluc' => $id_mucluc,
+            'id_dvbq' => $id_dvbq,
+            'ma_hoso' => $maHoSo,
+            'so_vanban' => trim($_POST['so_vanban'] ?? '') ?: null,
+            'trich_yeu' => trim($_POST['trich_yeu'] ?? '') ?: null,
+            'trang_so' => trim($_POST['trang_so'] ?? '') ?: null,
+            'id_do_mat' => intval($_POST['id_do_mat'] ?? 0) ?: null,
+            'tacgia_vanban' => trim($_POST['tacgia_vanban'] ?? '') ?: null,
+            'nguoi_ky' => trim($_POST['nguoi_ky'] ?? '') ?: null,
+            'ngay_thang_nam_vanban' => $_POST['ngay_thang_nam_vanban'] ?? null,
+            'id_theloaivanban_fk' => intval($_POST['id_theloaivanban_fk'] ?? 0) ?: null,
+            'sotrang_vanban' => intval($_POST['sotrang_vanban'] ?? 1),
+            'so_thutu' => trim($_POST['so_thutu'] ?? '') ?: null,
+            'dataentry_status' => 2,
+            'ten_taptin' => trim($_POST['ten_taptin'] ?? '') ?: null,
+            'scan_vanban_Id' => $scanId,
+            'ngay_tao' => $now,
+            'id_nguoisua' => $userId,
+            'ngay_sua' => $now
         ];
 
+        // Gọi model xử lý
         $result = $this->model->upsertVanBan($data);
 
         if ($result) {
-            echo "<script>alert('✅ Dữ liệu đã được lưu thành công!');</script>";
-            header('Location: khoidang.php?controller=khoidang&action=index&file=' . urlencode($tenFile));
-            exit;
+            echo "<script>alert('✅ Lưu thành công!'); window.location.href='?controller=KhoiDang';</script>";
         } else {
-            echo "<script>alert('❌ Lỗi khi lưu dữ liệu');</script>";
+            echo "<script>alert('❌ Lỗi khi lưu dữ liệu'); history.back();</script>";
         }
+
+        exit;
     }
 }
-    
+
+
 }
+
+
