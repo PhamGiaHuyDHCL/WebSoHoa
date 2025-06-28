@@ -2,7 +2,6 @@
 
 <?php
 require_once __DIR__ . '/../models/KhoiDangModel.php';
-require(__DIR__ . '/../views/NhapLieu/khoidang.php');
 
 class KhoiDangController {
     private $model;
