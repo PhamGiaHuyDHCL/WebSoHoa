@@ -78,7 +78,7 @@ class ImportModel {
 
         return $rows;
     }
-
+    
     public function insertImportData($data) {
         try {
             $stmt = $this->conn->prepare("

@@ -51,7 +51,7 @@ for ($i = 0; $i < $totalFiles; $i++) {
         $skipped++;
         continue;
     }
-
+    
     $safeName = preg_replace('/[^a-zA-Z0-9_\.-]/', '_', pathinfo($originalName, PATHINFO_FILENAME)) . '.pdf';
     $fullPath = $uploadDir . $safeName;
     $relPath = "uploads/$ma_phong/$khoa/$hop_ho_so/$safeName";

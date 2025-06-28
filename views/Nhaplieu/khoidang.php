@@ -1,16 +1,32 @@
 <?php
 if (session_status() === PHP_SESSION_NONE) session_start();
 
-if (!empty($_SESSION['success'])) {
-    echo '<div id="success-alert" class="alert alert-success text-center fw-bold">' . $_SESSION['success'] . '</div>';
-    unset($_SESSION['success']);
-    echo '<script>setTimeout(() => document.getElementById("success-alert")?.remove(), 2000);</script>';
-}
-include_once '../layouts/header.php';
 require_once __DIR__ . '/../../models/KhoiDangModel.php';
 include_once '../../controllers/KhoiDangController.php';
 
 $model = new KhoiDangModel();
+
+// === Auto lấy file chưa nhập theo thư mục ===
+if (!isset($_GET['file'])) {
+    $userId = $_SESSION['taikhoan_id'] ?? null;
+    $lastPath = $_SESSION['last_path'] ?? null;
+
+    if (!$lastPath || !$model->isFolderAvailable($lastPath)) {
+        $lastPath = $model->getAvailableFolderPath();
+        $_SESSION['last_path'] = $lastPath;
+    }
+
+    if ($lastPath) {
+        $file = $model->getNextUnprocessedFileInFolder($lastPath);
+        if ($file) {
+            header("Location: ?controller=khoidang&file=" . urlencode($file['path']));
+            exit;
+        }
+    }
+}
+
+include_once '../layouts/header.php';
+
 $scan = $model->getScanHoSoList();
 $phong = $model->getPhong();
 $mucluc = $model->getMucLuc();
@@ -35,6 +51,23 @@ $filePath = $_SERVER['DOCUMENT_ROOT'] . $webPath;
 $ext = strtolower(pathinfo($selectedFilePath, PATHINFO_EXTENSION));
 ?>
 
+<style>
+  html, body {
+    height: 100%;
+    margin: 0;
+    overflow: hidden;
+  }
+  .container-fluid {
+    height: calc(100vh - 80px);
+    display: flex;
+    flex-direction: column;
+  }
+  .main-row {
+    flex: 1;
+    overflow: hidden;
+  }
+</style>
+
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 <script src="https://unpkg.com/@panzoom/panzoom@4.5.1/dist/panzoom.min.js"></script>
 
@@ -43,11 +76,12 @@ $ext = strtolower(pathinfo($selectedFilePath, PATHINFO_EXTENSION));
     <div>
       <form method="get">
         <input type="hidden" name="controller" value="khoidang">
-        <label class="form-label fw-bold mb-0">Chọn file:</label>
         <select name="file" class="form-select d-inline w-auto" onchange="this.form.submit()">
-          <option value="">-- Chọn file --</option>
           <?php foreach ($scan as $file): ?>
-            <option value="<?= htmlspecialchars($file['path']) ?>" <?= ($file['path'] === $selectedFilePath ? 'selected' : '') ?>>
+            <?php if ($file['khoi'] != '2') continue; ?>
+            <option value="<?= htmlspecialchars($file['path']) ?>"
+                    <?= ($file['path'] === $selectedFilePath ? 'selected' : '') ?>
+                    <?= ($file['dataentry_status'] == 2 && $file['path'] !== $selectedFilePath ? 'disabled' : '') ?>>
               <?= htmlspecialchars($file['folder_name']) ?> <?= $file['dataentry_status'] == 2 ? '✅' : '' ?>
             </option>
           <?php endforeach; ?>
@@ -59,8 +93,8 @@ $ext = strtolower(pathinfo($selectedFilePath, PATHINFO_EXTENSION));
     </div>
   </div>
 
-  <div class="row g-0">
-    <div class="col-md-8 border-end p-0 position-relative" style="height: 100vh; overflow: hidden;">
+  <div class="row g-0 main-row">
+    <div class="col-md-8 border-end p-0 position-relative" style="height: 100%;">
       <?php if ($selectedFilePath && file_exists($filePath)): ?>
         <?php if ($ext === 'pdf'): ?>
         <div id="file-viewer" style="width: 100%; height: 100%; overflow: hidden; position: relative;">
@@ -113,12 +147,11 @@ $ext = strtolower(pathinfo($selectedFilePath, PATHINFO_EXTENSION));
       <?php endif; ?>
     </div>
 
-    <!-- Nhập liệu -->
-    <div class="col-md-4 p-3 d-flex flex-column">
-      <div class="card shadow-sm flex-grow-1">
+    <div class="col-md-4 p-3 d-flex flex-column" style="height: 100%; overflow: hidden;">
+      <div class="card shadow-sm flex-grow-1 d-flex flex-column" style="overflow: hidden;">
         <div class="card-header bg-light"><strong>Nhập liệu</strong></div>
-        <div class="card-body overflow-auto">
-          <?php if ($selectedFilePath && $selectedScanId): ?>
+        <div class="card-body flex-grow-1 overflow-auto">
+          <?php if ($selectedFilePath && $selectedScanId && $mucLucInfo['dataentry_status'] != 2): ?>
           <form method="post" action="../../index.php?controller=khoidang&action=saveVanBan">
             <input type="hidden" name="ten_taptin" value="<?= basename($selectedFilePath) ?>">
             <input type="hidden" name="scan_vanban_Id" value="<?= $selectedScanId ?>">
@@ -140,9 +173,7 @@ $ext = strtolower(pathinfo($selectedFilePath, PATHINFO_EXTENSION));
                 <select name="id_do_mat" class="form-select">
                   <option value="">-- Độ mật --</option>
                   <?php foreach ($doMat as $dm): ?>
-                    <option value="<?= $dm['ID'] ?>" <?= ($dm['ID'] == ($_POST['id_do_mat'] ?? '') ? 'selected' : '') ?>>
-                      <?= htmlspecialchars($dm['MaDoMat'] . ' - ' . $dm['TenDoMat']) ?>
-                    </option>
+                    <option value="<?= $dm['ID'] ?>"><?= htmlspecialchars($dm['MaDoMat'] . ' - ' . $dm['TenDoMat']) ?></option>
                   <?php endforeach; ?>
                 </select>
               </div>
@@ -156,9 +187,7 @@ $ext = strtolower(pathinfo($selectedFilePath, PATHINFO_EXTENSION));
                 <select name="id_theloaivanban_fk" class="form-select">
                   <option value="">-- Thể loại --</option>
                   <?php foreach ($theLoai as $tl): ?>
-                    <option value="<?= $tl['ID'] ?>" <?= ($tl['ID'] == ($_POST['id_theloaivanban_fk'] ?? '') ? 'selected' : '') ?>>
-                      <?= htmlspecialchars($tl['MaTheLoai'] . ' - ' . $tl['TenTheLoai']) ?>
-                    </option>
+                    <option value="<?= $tl['ID'] ?>"><?= htmlspecialchars($tl['MaTheLoai'] . ' - ' . $tl['TenTheLoai']) ?></option>
                   <?php endforeach; ?>
                 </select>
               </div>
@@ -172,9 +201,11 @@ $ext = strtolower(pathinfo($selectedFilePath, PATHINFO_EXTENSION));
             </div>
 
             <div class="text-end mt-3">
-              <button type="submit" class="btn btn-success">💾 Lưu</button>
+              <button type="submit" class="btn btn-success">💾 Lưu và chuyển tiếp</button>
             </div>
           </form>
+          <?php elseif ($mucLucInfo && $mucLucInfo['dataentry_status'] == 2): ?>
+            <div class="alert alert-success">✅ Văn bản này đã được nhập liệu. Không thể chỉnh sửa thêm.</div>
           <?php else: ?>
             <div class="alert alert-warning">Vui lòng chọn file để nhập liệu.</div>
           <?php endif; ?>
@@ -185,3 +216,47 @@ $ext = strtolower(pathinfo($selectedFilePath, PATHINFO_EXTENSION));
 </div>
 
 <?php include '../layouts/footer.php'; ?>
+html, body {
+  height: 100%;
+  margin: 0;
+  overflow: hidden;
+}
+
+.container-fluid {
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  padding-left: 0;
+  padding-right: 0;
+}
+
+.header-bar {
+  flex: 0 0 auto;
+}
+
+.main-row {
+  flex: 1 1 auto;
+  display: flex;
+  overflow: hidden;
+}
+
+.main-row > .col-md-8,
+.main-row > .col-md-4 {
+  height: 100%;
+  overflow: hidden;
+}
+
+#file-viewer {
+  height: 100%;
+  width: 100%;
+  overflow: hidden;
+  position: relative;
+}
+
+#pdf-canvas {
+  display: block;
+  cursor: grab;
+  width: 100%;
+  height: auto;
+  object-fit: contain;
+}

@@ -1,12 +1,9 @@
 <?php
-// Bắt đầu session nếu chưa có
-if (session_status() === PHP_SESSION_NONE) {
-    session_start();
-}
+if (session_status() === PHP_SESSION_NONE) session_start();
 
 // Kiểm tra đăng nhập
 if (!isset($_SESSION['taikhoan_id'])) {
-    header("Location:http://localhost/websohoa1/views/login/dangnhap.php");
+    header("Location: http://localhost/websohoa1/views/login/dangnhap.php");
     exit();
 }
 
@@ -18,7 +15,7 @@ $role_name = "Người dùng";
 $taikhoan = "";
 $id_phanquyen = 0;
 
-if ($conn && !empty($_SESSION['taikhoan_id'])) {
+if (!empty($_SESSION['taikhoan_id'])) {
     $id = $_SESSION['taikhoan_id'];
     $sql = "SELECT tk.TaiKhoan, tk.IDPhanQuyen, pq.role_name 
             FROM taikhoan tk 
@@ -32,6 +29,7 @@ if ($conn && !empty($_SESSION['taikhoan_id'])) {
     $stmt->close();
 }
 ?>
+
 <!DOCTYPE html>
 <html lang="vi">
 <head>
@@ -41,10 +39,10 @@ if ($conn && !empty($_SESSION['taikhoan_id'])) {
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
   <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet" />
   <style>
-    body {
-      font-family: Arial, sans-serif;
-      background-color: #f8f9fa;
+    html, body {
+      height: 100%;
       margin: 0;
+      overflow: hidden;
     }
     .sidebar {
       width: 220px;
@@ -54,6 +52,7 @@ if ($conn && !empty($_SESSION['taikhoan_id'])) {
       position: fixed;
       top: 0;
       left: 0;
+      z-index: 1000;
     }
     .sidebar .logo {
       padding: 20px;
@@ -71,47 +70,59 @@ if ($conn && !empty($_SESSION['taikhoan_id'])) {
     .sidebar a.active {
       background-color: #495057;
     }
+
     .main-content {
       margin-left: 220px;
-      padding: 20px;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .top-header {
+      padding: 10px 20px;
+      background-color: #fff;
+      border-bottom: 1px solid #ddd;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      z-index: 999;
     }
   </style>
 </head>
 <body>
-  <div class="d-flex">
-    <!-- Sidebar -->
-    <div class="sidebar">
-      <div class="logo">
-        <i class="bi bi-file-earmark-text me-2"></i> NHẬP LIỆU SỐ HÓA
-      </div>
-      <a href="http://localhost/websohoa1/" class="<?= basename($_SERVER['PHP_SELF']) == 'index.php' ? 'active' : '' ?>">
-        <i class="bi bi-house-door me-2"></i> Home
-      </a>
-      <a href="http://localhost/websohoa1/views/import/dsimport.php" class="<?= basename($_SERVER['PHP_SELF']) == 'dsimport.php' ? 'active' : '' ?>">
-        <i class="bi bi-file-earmark-arrow-up me-2"></i> Import PDF
-      </a>
-      <a href="#"><i class="bi bi-building me-2"></i> Nhập liệu khối Chính</a>
-      <a href="http://localhost/websohoa1/views/Nhaplieu/khoidang.php" class="<?= basename($_SERVER['PHP_SELF']) == 'khoidang.php' ? 'active' : '' ?>">
-        <i class="bi bi-building me-2"></i> Nhập liệu khối Đảng
-      </a>
-
-      <?php if ($id_phanquyen == 1): // chỉ admin mới thấy ?>
-        <a href="http://localhost/websohoa1/views/phong/dsphong.php" class="<?= basename($_SERVER['PHP_SELF']) == 'dsphong.php' ? 'active' : '' ?>">
-          <i class="bi bi-list-ul me-2"></i> Quản lí danh mục
-        </a>
-        <a href="http://localhost/websohoa1/views/taikhoan/dstaikhoan.php" class="<?= basename($_SERVER['PHP_SELF']) == 'dstaikhoan.php' ? 'active' : '' ?>">
-          <i class="bi bi-people me-2"></i> Quản lí tài khoản
-        </a>
-      <?php endif; ?>
+  <!-- Sidebar -->
+  <div class="sidebar">
+    <div class="logo">
+      <i class="bi bi-file-earmark-text me-2"></i> NHẬP LIỆU SỐ HÓA
     </div>
+    <a href="http://localhost/websohoa1/" class="<?= basename($_SERVER['PHP_SELF']) == 'index.php' ? 'active' : '' ?>">
+      <i class="bi bi-house-door me-2"></i> Home
+    </a>
+    <a href="http://localhost/websohoa1/views/import/dsimport.php" class="<?= basename($_SERVER['PHP_SELF']) == 'dsimport.php' ? 'active' : '' ?>">
+      <i class="bi bi-file-earmark-arrow-up me-2"></i> Import PDF
+    </a>
+    <a href="#"><i class="bi bi-building me-2"></i> Nhập liệu khối Chính</a>
+    <a href="http://localhost/websohoa1/views/Nhaplieu/khoidang.php" class="<?= basename($_SERVER['PHP_SELF']) == 'khoidang.php' ? 'active' : '' ?>">
+      <i class="bi bi-building me-2"></i> Nhập liệu khối Đảng
+    </a>
 
-    <!-- Nội dung chính -->
-    <div class="main-content w-100">
-      <!-- Header info -->
-      <div class="d-flex justify-content-between align-items-center mb-3">
-        <h4 class="text-primary">Xin chào, <?= htmlspecialchars($role_name) ?> 👋</h4>
-        <div>
-          <span><i class="bi bi-person-circle me-1"></i> <?= htmlspecialchars($taikhoan) ?>,</span>
-          <a href="http://localhost/websohoa1/views/login/dangxuat.php" class="text-decoration-none">Đăng xuất</a>
-        </div>
+    <?php if ($id_phanquyen == 1): ?>
+      <a href="http://localhost/websohoa1/views/phong/dsphong.php" class="<?= basename($_SERVER['PHP_SELF']) == 'dsphong.php' ? 'active' : '' ?>">
+        <i class="bi bi-list-ul me-2"></i> Quản lí danh mục
+      </a>
+      <a href="http://localhost/websohoa1/views/taikhoan/dstaikhoan.php" class="<?= basename($_SERVER['PHP_SELF']) == 'dstaikhoan.php' ? 'active' : '' ?>">
+        <i class="bi bi-people me-2"></i> Quản lí tài khoản
+      </a>
+    <?php endif; ?>
+  </div>
+
+  <!-- Nội dung -->
+  <div class="main-content">
+    <div class="top-header">
+      <h5 class="text-primary mb-0">Xin chào, <?= htmlspecialchars($role_name) ?> 👋</h5>
+      <div>
+        <i class="bi bi-person-circle me-1"></i>
+        <?= htmlspecialchars($taikhoan) ?>,
+        <a href="http://localhost/websohoa1/views/login/dangxuat.php" class="text-decoration-none">Đăng xuất</a>
       </div>
+    </div>

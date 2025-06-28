@@ -53,12 +53,17 @@ $totalPages = ceil($total / $filters['limit']);
 
   <?php foreach (['msg', 'upload_success', 'upload_error'] as $type): ?>
     <?php if (!empty($_GET[$type]) || !empty($_SESSION[$type])): ?>
-      <div class="alert alert-<?= $type === 'upload_error' ? 'danger' : 'success' ?>">
-        <?= htmlspecialchars($_GET[$type] ?? $_SESSION[$type]) ?>
-        <?php unset($_SESSION[$type]); ?>
+      <?php
+        $message = htmlspecialchars($_GET[$type] ?? $_SESSION[$type]);
+        $alertClass = ($type === 'upload_error') ? 'danger' : 'success';
+      ?>
+      <div class="alert alert-<?= $alertClass ?>" id="alert_<?= $type ?>">
+        <?= $message ?>
       </div>
+      <?php unset($_SESSION[$type]); ?>
     <?php endif; ?>
   <?php endforeach; ?>
+
 
   <!-- Bộ lọc -->
   <form method="GET" class="row g-2 mb-3">
@@ -127,7 +132,7 @@ $totalPages = ceil($total / $filters['limit']);
               <td><?= htmlspecialchars($d['khoa']) ?></td>
               <td><?= htmlspecialchars($d['folder_name']) ?></td>
               <td><?= htmlspecialchars($d['TenNguoiScan']) ?></td>
-              <td><?= $d['dataentry_status'] == 1 ? 'Đã nhập' : 'Chưa nhập' ?></td>
+              <td><?= $d['dataentry_status'] == 2 ? 'Đã nhập' : 'Chưa nhập' ?></td>
               <td><?= htmlspecialchars($d['ngay_nhap']) ?></td>
             </tr>
           <?php endforeach; ?>
@@ -206,6 +211,28 @@ $totalPages = ceil($total / $filters['limit']);
       </div>
     </div>
   </div>
+  <script>
+  ['msg', 'upload_success', 'upload_error'].forEach(function(type) {
+    const el = document.getElementById('alert_' + type);
+    if (el) {
+      setTimeout(() => {
+        el.style.transition = 'opacity 0.5s ease';
+        el.style.opacity = 0;
+        setTimeout(() => el.remove(), 500); // Ẩn hoàn toàn sau khi mờ dần
+      }, 5000); // 5 giây
+    }
+  });
+  </script>
+  <script>
+  const alertBox = document.getElementById('alert_msg');
+  if (alertBox) {
+    setTimeout(() => {
+      alertBox.style.transition = 'opacity 0.5s ease';
+      alertBox.style.opacity = 0;
+      setTimeout(() => alertBox.remove(), 500); // Ẩn hẳn
+    }, 5000); // 5 giây
+  }
+  </script>
 
   <!-- Script -->
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
