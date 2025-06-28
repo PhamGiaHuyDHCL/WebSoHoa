@@ -204,11 +204,27 @@ $ext = strtolower(pathinfo($selectedFilePath, PATHINFO_EXTENSION));
               <button type="submit" class="btn btn-success">💾 Lưu và chuyển tiếp</button>
             </div>
           </form>
-          <?php elseif ($mucLucInfo && $mucLucInfo['dataentry_status'] == 2): ?>
-            <div class="alert alert-success">✅ Văn bản này đã được nhập liệu. Không thể chỉnh sửa thêm.</div>
-          <?php else: ?>
-            <div class="alert alert-warning">Vui lòng chọn file để nhập liệu.</div>
-          <?php endif; ?>
+        <?php elseif ($mucLucInfo): ?>
+            <?php
+              $editingUser = $model->getEditingUserByPath($mucLucInfo['path']);
+              $currentUserId = $_SESSION['taikhoan_id'] ?? null;
+            ?>
+
+            <?php if ($mucLucInfo['dataentry_status'] == 2): ?>
+              <div class="alert alert-success">✅ Văn bản này đã được nhập liệu. Không thể chỉnh sửa thêm.</div>
+
+            <?php elseif ($editingUser && $editingUser['taikhoan_id'] != $currentUserId): ?>
+              <div class="alert alert-danger">
+                ❗ File này đang được người khác nhập liệu (Tài khoản ID: <?= $editingUser['taikhoan_id'] ?>). Vui lòng chờ hoặc chọn file khác.
+              </div>
+
+            <?php else: ?>
+              <div class="alert alert-warning">Vui lòng chọn file để nhập liệu.</div>
+            <?php endif; ?>
+        <?php else: ?>
+          <div class="alert alert-warning">Vui lòng chọn file để nhập liệu.</div>
+        <?php endif; ?>
+
         </div>
       </div>
     </div>
@@ -216,47 +232,3 @@ $ext = strtolower(pathinfo($selectedFilePath, PATHINFO_EXTENSION));
 </div>
 
 <?php include '../layouts/footer.php'; ?>
-html, body {
-  height: 100%;
-  margin: 0;
-  overflow: hidden;
-}
-
-.container-fluid {
-  height: 100vh;
-  display: flex;
-  flex-direction: column;
-  padding-left: 0;
-  padding-right: 0;
-}
-
-.header-bar {
-  flex: 0 0 auto;
-}
-
-.main-row {
-  flex: 1 1 auto;
-  display: flex;
-  overflow: hidden;
-}
-
-.main-row > .col-md-8,
-.main-row > .col-md-4 {
-  height: 100%;
-  overflow: hidden;
-}
-
-#file-viewer {
-  height: 100%;
-  width: 100%;
-  overflow: hidden;
-  position: relative;
-}
-
-#pdf-canvas {
-  display: block;
-  cursor: grab;
-  width: 100%;
-  height: auto;
-  object-fit: contain;
-}
