@@ -68,13 +68,14 @@ public function saveVanBan() {
         // Gọi model xử lý
         $result = $this->model->upsertVanBan($data);
 
-        if ($result) {
-            echo "<script>alert('✅ Lưu thành công!'); window.location.href='?controller=KhoiDang';</script>";
-        } else {
-            echo "<script>alert('❌ Lỗi khi lưu dữ liệu'); history.back();</script>";
-        }
-
-        exit;
+            if ($result) {
+                $_SESSION['success'] = '✅ Lưu thành công!';
+                header("Location: http://localhost/websohoa1/views/Nhaplieu/khoidang.php");
+                exit;
+            } else {
+                echo "<script>alert('❌ Lỗi khi lưu dữ liệu'); history.back();</script>";
+                exit;
+            }
     }
 }
 
