@@ -9,12 +9,16 @@
         </div>
         <div class="modal-body">
           <div class="row mb-3">
-            <div class="col-md-4"><label>Họ tên *</label><input name="hoten" class="form-control" required></div>
+            <div class="col-md-4"><label>Họ tên *</label>
+              <input name="hoten"  id="editHoTen" class="form-control" required pattern="^[a-zA-ZÀ-ỹ\s]+$" title="Chỉ cho phép chữ cái và khoảng trắng">
+</div>
             <div class="col-md-4"><label>Số điện thoại *</label><input name="sdt" class="form-control" required pattern="\d{10}"></div>
             <div class="col-md-4"><label>Số CCCD *</label><input name="cccd" class="form-control" required pattern="\d{12}"></div>
           </div>
           <div class="row mb-3">
-            <div class="col-md-4"><label>Tài khoản *</label><input name="taikhoan" class="form-control" required></div>
+            <div class="col-md-4"><label>Tài khoản *</label>
+               <input name="taikhoan" id="editTaiKhoan" class="form-control" required pattern="^[a-zA-Z0-9_]{4,20}$" title="Chỉ gồm chữ cái, số, dấu gạch dưới, từ 4–20 ký tự">
+            </div>
             <div class="col-md-4"><label>Mật khẩu *</label><input name="matkhau" type="password" class="form-control" required></div>
             <div class="col-md-4">
               <label>Quyền *</label>
