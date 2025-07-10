@@ -28,11 +28,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             'cccd'         => trim($_POST['cccd']),
             'taikhoan'     => trim($_POST['taikhoan']),
             'quyen'        => (int)$_POST['quyen'],
-            'new_password' => $_POST['new_password'] ?? null
+            'new_password' => !empty($_POST['new_password']) ? $_POST['new_password'] : null
         ];
 
-        // Kiểm tra hợp lệ
-        if (in_array('', $data, true)) {
+        // Chỉ kiểm tra các trường bắt buộc (trừ mật khẩu mới)
+        if ($data['hoten'] === '' || $data['sdt'] === '' || $data['cccd'] === '' || $data['taikhoan'] === '' || !$data['quyen']) {
             $msg = 'missing';
         } elseif (!preg_match('/^\d{10}$/', $data['sdt'])) {
             $msg = 'invalid_sdt';
@@ -43,7 +43,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         } else {
             $msg = $model->updateAccount($id, $data) ? 'edit_success' : 'edit_fail';
         }
-
     }
 
     // THÊM tài khoản mới
@@ -70,7 +69,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
     }
 
-    // Redirect lại về view để tránh gửi lại form khi F5
+    // Redirect để tránh gửi lại form
     header("Location: dstaikhoan.php?msg=$msg");
     exit();
 }
