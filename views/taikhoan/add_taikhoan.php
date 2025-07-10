@@ -19,7 +19,13 @@
             <div class="col-md-4"><label>Tài khoản *</label>
                <input name="taikhoan" id="editTaiKhoan" class="form-control" required pattern="^[a-zA-Z0-9_]{4,20}$" title="Chỉ gồm chữ cái, số, dấu gạch dưới, từ 4–20 ký tự">
             </div>
-            <div class="col-md-4"><label>Mật khẩu *</label><input name="matkhau" type="password" class="form-control" required></div>
+            <div class="col-md-4"><label>Mật khẩu *</label>
+              <input name="matkhau" type="password" class="form-control" required></div>
+             <input type="password" name="matkhau" class="form-control" required
+                   pattern="(?=.*[A-Za-z])(?=.*\d).{6,}"
+                   title="Tối thiểu 6 ký tự, gồm ít nhất 1 chữ và 1 số"
+                   >
+
             <div class="col-md-4">
               <label>Quyền *</label>
               <select name="quyen" class="form-select" required>
