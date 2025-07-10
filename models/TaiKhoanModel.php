@@ -1,136 +1,79 @@
 <?php
-class TaiKhoanModel {
-    private $conn;
+require_once '../../config/dbadmin.php';
+require_once '../../models/TaiKhoanModel.php';
 
-    public function __construct($conn) {
-        $this->conn = $conn;
-    }
+// ✅ Kiểm tra quyền truy cập
+checkAdmin();
 
-    public function getAllRoles() {
-        $roles = [];
-        $res = $this->conn->query("SELECT ID, role_name FROM phanquyen");
-        while ($r = $res->fetch_assoc()) $roles[] = $r;
-        return $roles;
-    }
+// ✅ Kết nối CSDL
+$conn = new mysqli('localhost', 'root', '', 'qlsohoa');
+$conn->set_charset("utf8mb4");
+if ($conn->connect_error) die("Lỗi kết nối CSDL: " . $conn->connect_error);
 
-    public function getAllAccounts() {
-        $sql = "
-            SELECT tk.ID, tk.TaiKhoan, nv.HoTen, nv.CCCD, nv.SoDienThoai, pq.role_name AS Quyen, pq.MoTa, pq.ID AS QuyenID
-            FROM taikhoan tk
-            JOIN phanquyen pq ON pq.ID = tk.IDPhanQuyen
-            JOIN nhanvien nv ON nv.ID = tk.IDNhanVien
-        ";
-        return $this->conn->query($sql);
-    }
+// ✅ Khởi tạo Model
+$model = new TaiKhoanModel($conn);
 
-    public function checkCCCDExist($cccd, $exceptId = null) {
-        $sql = $exceptId
-            ? "SELECT ID FROM nhanvien WHERE CCCD = ? AND ID != (SELECT IDNhanVien FROM taikhoan WHERE ID = ?)"
-            : "SELECT ID FROM nhanvien WHERE CCCD = ?";
-        $stmt = $this->conn->prepare($sql);
-        if ($exceptId) {
-            $stmt->bind_param("si", $cccd, $exceptId);
+// ✅ Xử lý thông điệp
+$msg = $_GET['msg'] ?? '';
+
+// ✅ Xử lý thêm/sửa nếu có dữ liệu POST
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+
+    // CHỈNH SỬA tài khoản
+    if (isset($_POST['edit_id'])) {
+        $id = (int)$_POST['edit_id'];
+        $data = [
+            'hoten'        => trim($_POST['hoten']),
+            'sdt'          => trim($_POST['sdt']),
+            'cccd'         => trim($_POST['cccd']),
+            'taikhoan'     => trim($_POST['taikhoan']),
+            'quyen'        => (int)$_POST['quyen'],
+            'new_password' => !empty($_POST['new_password']) ? $_POST['new_password'] : null
+        ];
+
+        // Chỉ kiểm tra các trường bắt buộc (trừ mật khẩu mới)
+        if ($data['hoten'] === '' || $data['sdt'] === '' || $data['cccd'] === '' || $data['taikhoan'] === '' || !$data['quyen']) {
+            $msg = 'missing';
+        } elseif (!preg_match('/^\d{10}$/', $data['sdt'])) {
+            $msg = 'invalid_sdt';
+        } elseif (!preg_match('/^\d{12}$/', $data['cccd'])) {
+            $msg = 'invalid_cccd';
+        } elseif ($model->checkCCCDExist($data['cccd'], $id)) {
+            $msg = 'cccd_exist';
         } else {
-            $stmt->bind_param("s", $cccd);
-        }
-        $stmt->execute();
-        $stmt->store_result();
-        return $stmt->num_rows > 0;
-    }
-
-    public function addAccount($data) {
-        $this->conn->begin_transaction();
-        try {
-            $stmt_nv = $this->conn->prepare("INSERT INTO nhanvien (HoTen, SoDienThoai, CCCD) VALUES (?, ?, ?)");
-            $stmt_nv->bind_param("sss", $data['hoten'], $data['sdt'], $data['cccd']);
-            $stmt_nv->execute();
-            $idnv = $this->conn->insert_id;
-            $stmt_nv->close();
-
-            $hash = password_hash($data['matkhau'], PASSWORD_DEFAULT);
-            $stmt_tk = $this->conn->prepare("INSERT INTO taikhoan (TaiKhoan, MatKhau, IDPhanQuyen, IDNhanVien) VALUES (?, ?, ?, ?)");
-            $stmt_tk->bind_param("ssii", $data['taikhoan'], $hash, $data['quyen'], $idnv);
-            $stmt_tk->execute();
-            $stmt_tk->close();
-
-            $this->conn->commit();
-            return true;
-        } catch (Exception $e) {
-            $this->conn->rollback();
-            return false;
+            $msg = $model->updateAccount($id, $data) ? 'edit_success' : 'edit_fail';
         }
     }
 
-    public function updateAccount($id, $data) {
-        $this->conn->begin_transaction();
-        try {
-            $stmt_nv = $this->conn->prepare("
-                UPDATE nhanvien 
-                SET HoTen = ?, SoDienThoai = ?, CCCD = ? 
-                WHERE ID = (SELECT IDNhanVien FROM taikhoan WHERE ID = ?)
-            ");
-            $stmt_nv->bind_param("sssi", $data['hoten'], $data['sdt'], $data['cccd'], $id);
-            $stmt_nv->execute();
-            $stmt_nv->close();
+    // THÊM tài khoản mới
+    elseif (isset($_POST['hoten'], $_POST['sdt'], $_POST['cccd'], $_POST['taikhoan'], $_POST['matkhau'], $_POST['quyen'])) {
+        $data = [
+            'hoten'    => trim($_POST['hoten']),
+            'sdt'      => trim($_POST['sdt']),
+            'cccd'     => trim($_POST['cccd']),
+            'taikhoan' => trim($_POST['taikhoan']),
+            'matkhau'  => $_POST['matkhau'],
+            'quyen'    => (int)$_POST['quyen']
+        ];
 
-            if (!empty($data['new_password'])) {
-                $hash = password_hash($data['new_password'], PASSWORD_DEFAULT);
-                $stmt = $this->conn->prepare("
-                    UPDATE taikhoan 
-                    SET TaiKhoan = ?, MatKhau = ?, IDPhanQuyen = ? 
-                    WHERE ID = ?
-                ");
-                $stmt->bind_param("ssii", $data['taikhoan'], $hash, $data['quyen'], $id);
-            } else {
-                $stmt = $this->conn->prepare("
-                    UPDATE taikhoan 
-                    SET TaiKhoan = ?, IDPhanQuyen = ? 
-                    WHERE ID = ?
-                ");
-                $stmt->bind_param("sii", $data['taikhoan'], $data['quyen'], $id);
-            }
-            $stmt->execute();
-            $stmt->close();
-
-            $this->conn->commit();
-            return true;
-        } catch (Exception $e) {
-            $this->conn->rollback();
-            return false;
+        if (in_array('', $data, true)) {
+            $msg = 'missing';
+        } elseif (!preg_match('/^\d{10}$/', $data['sdt'])) {
+            $msg = 'invalid_sdt';
+        } elseif (!preg_match('/^\d{12}$/', $data['cccd'])) {
+            $msg = 'invalid_cccd';
+        } elseif ($model->checkCCCDExist($data['cccd'])) {
+            $msg = 'cccd_exist';
+        } else {
+            $msg = $model->addAccount($data) ? 'success' : 'error';
         }
     }
 
-    public function deleteAccount($id) {
-        $this->conn->begin_transaction();
-        try {
-            $stmt = $this->conn->prepare("SELECT IDNhanVien FROM taikhoan WHERE ID = ?");
-            $stmt->bind_param("i", $id);
-            $stmt->execute();
-            $stmt->bind_result($idnv);
-            $stmt->fetch();
-            $stmt->close();
-
-            if ($idnv) {
-                $stmtDelTK = $this->conn->prepare("DELETE FROM taikhoan WHERE ID = ?");
-                $stmtDelTK->bind_param("i", $id);
-                $stmtDelTK->execute();
-                $stmtDelTK->close();
-
-                $stmtDelNV = $this->conn->prepare("DELETE FROM nhanvien WHERE ID = ?");
-                $stmtDelNV->bind_param("i", $idnv);
-                $stmtDelNV->execute();
-                $stmtDelNV->close();
-
-                $this->conn->commit();
-                return true;
-            } else {
-                $this->conn->rollback();
-                return false;
-            }
-        } catch (Exception $e) {
-            $this->conn->rollback();
-            return false;
-        }
-    }
+    // Redirect để tránh gửi lại form
+    header("Location: dstaikhoan.php?msg=$msg");
+    exit();
 }
-?>
+
+// ✅ Lấy danh sách quyền và tài khoản
+$roles    = $model->getAllRoles();
+$accounts = $model->getAllAccounts();
