@@ -12,7 +12,7 @@
           <div class="row mb-3">
             <div class="col-md-4">
               <label>Họ tên *</label>
-              <input name="hoten" id="editHoTen" class="form-control" required>
+               <input name="hoten"  id="editHoTen" class="form-control" required pattern="^[a-zA-ZÀ-ỹ\s]+$" title="Chỉ cho phép chữ cái và khoảng trắng">
             </div>
             <div class="col-md-4">
               <label>Số điện thoại *</label>
@@ -26,7 +26,7 @@
           <div class="row mb-3">
             <div class="col-md-4">
               <label>Tài khoản *</label>
-              <input name="taikhoan" id="editTaiKhoan" class="form-control" required>
+              <input name="taikhoan" id="editTaiKhoan" class="form-control" required pattern="^[a-zA-Z0-9_]{4,20}$" title="Chỉ gồm chữ cái, số, dấu gạch dưới, từ 4–20 ký tự">
             </div>
             <div class="col-md-4">
               <label>Mật khẩu mới (để trống nếu không đổi)</label>
