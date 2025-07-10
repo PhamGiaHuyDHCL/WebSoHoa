@@ -55,10 +55,12 @@ class TaiKhoanModel {
 
             $this->conn->commit();
             return true;
-        } catch (Exception $e) {
+       } catch (Exception $e) {
             $this->conn->rollback();
+            error_log("❌ updateAccount() Lỗi: " . $e->getMessage());
             return false;
         }
+
     }
 
     public function updateAccount($id, $data) {
@@ -94,10 +96,12 @@ class TaiKhoanModel {
 
             $this->conn->commit();
             return true;
-        } catch (Exception $e) {
+       } catch (Exception $e) {
             $this->conn->rollback();
+            error_log("❌ updateAccount() Lỗi: " . $e->getMessage());
             return false;
         }
+
     }
 
     public function deleteAccount($id) {
