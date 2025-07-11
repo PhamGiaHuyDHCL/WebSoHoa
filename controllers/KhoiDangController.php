@@ -94,12 +94,10 @@ class KhoiDangController {
                 }
 
                 if ($nextPath) {
-                    $this->model->updateUserNhapLieuSession($userId, $maPhong, $khoa, $hopHoSo, $nextPath);
-                    header("Location: ../websohoa1/views/NhapLieu/khoidang.php?file=" . urlencode($nextPath));
+                    header("Location: ?controller=khoidang&file=" . urlencode($nextPath));
                 } else {
-                    $this->model->clearSessionNhapLieu($userId);
                     $_SESSION['success'] = '✅ Lưu thành công! Đã hết file trong thư mục.';
-                    header("Location: ../websohoa1/views/NhapLieu/khoidang.php");
+                    header("Location: ?controller=khoidang");
                 }
                 exit;
             } else {

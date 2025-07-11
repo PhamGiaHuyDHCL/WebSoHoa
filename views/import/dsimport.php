@@ -180,9 +180,24 @@ $totalPages = ceil($total / $filters['limit']);
               <?php endforeach; ?>
             </select>
           </div>
-          <div class="mb-3"><label class="form-label">Mã mục lục</label><input type="text" name="ma_muc_luc" class="form-control" required></div>
-          <div class="mb-3"><label class="form-label">Khóa</label><input type="text" name="khoa" class="form-control" required></div>
-          <div class="mb-3"><label class="form-label">Hộp số</label><input type="text" name="hop_ho_so" class="form-control" required></div>
+          <div class="mb-3">
+            <label class="form-label">Mã mục lục</label>
+            <input type="text" name="ma_muc_luc" class="form-control" pattern="[A-Za-z0-9]+" 
+                   title="Chỉ được nhập chữ và số" required>
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label">Khóa</label>
+            <input type="text" name="khoa" class="form-control" pattern="[A-Za-z0-9]+" 
+                   title="Chỉ được nhập chữ và số" required>
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label">Hộp số</label>
+            <input type="text" name="hop_ho_so" class="form-control" pattern="[A-Za-z0-9]+" 
+                   title="Chỉ được nhập chữ và số" required>
+          </div>
+
           <div class="mb-3">
             <label class="form-label">Chọn thư mục PDF</label>
             <input type="file" name="pdf_files[]" class="form-control" multiple webkitdirectory directory required>

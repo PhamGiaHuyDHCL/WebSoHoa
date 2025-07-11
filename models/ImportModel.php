@@ -78,44 +78,69 @@ class ImportModel {
 
         return $rows;
     }
-    
-    public function insertImportData($data) {
-        try {
-            $stmt = $this->conn->prepare("
-                INSERT INTO scan_hoso (
-                    khoi, id_phong, id_mucluc, folder_name,
-                    dataentry_status, dataentry_user, scan_user,
-                    path, hop_ho_so, khoa, id_nguoisua,
-                    ngay_sua, ngay_nhap
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())
-            ");
+    public function getOrInsertId($table, $codeField, $nameField, $codeValue) {
+        // 1. Tìm ID theo mã
+        $sql = "SELECT id FROM `$table` WHERE `$codeField` = ?";
+        $stmt = $this->conn->prepare($sql);
+        $stmt->bind_param("s", $codeValue); // s = string
+        $stmt->execute();
+        $result = $stmt->get_result();
+        if ($row = $result->fetch_assoc()) {
+            return $row['id'];
+        }
 
-            $stmt->bind_param(
-                "iiisiiisssi",
-                $data['khoi'],               // int
-                $data['id_phong'],          // int
-                $data['ma_muc_luc'],        // int
-                $data['folder_name'],       // string
-                $data['dataentry_status'],  // int
-                $data['dataentry_user'],    // int
-                $data['scan_user'],         // int
-                $data['path'],              // string
-                $data['hop_ho_so'],         // string
-                $data['khoa'],              // string
-                $data['id_nguoisua']        // int
-            );
+        // 2. Nếu chưa có, chèn mới
+        $sqlInsert = "INSERT INTO `$table` (`$codeField`, `$nameField`) VALUES (?, ?)";
+        $stmtInsert = $this->conn->prepare($sqlInsert);
+        $stmtInsert->bind_param("ss", $codeValue, $codeValue); // cả 2 là string
+        $stmtInsert->execute();
 
-            if (!$stmt->execute()) {
-                error_log("MySQL Error: " . $stmt->error);
+        return $stmtInsert->insert_id;
+    }
+
+        public function insertImportData($data) {
+            try {
+                $stmt = $this->conn->prepare("
+                    INSERT INTO scan_hoso (
+                        khoi, id_phong, id_mucluc, folder_name,
+                        dataentry_status, dataentry_user, scan_user,
+                        path, hop_ho_so, khoa, id_nguoisua,
+                        ngay_sua, ngay_nhap
+                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())
+                ");
+
+                // Gán NULL nếu chưa có giá trị
+                $dataentry_status = $data['dataentry_status'] ?? null;
+                $dataentry_user = $data['dataentry_user'] ?? null;
+
+                $stmt->bind_param(
+                    "iiisiiisssi",
+                    $data['khoi'],               // int
+                    $data['id_phong'],          // int
+                    $data['id_mucluc'],         // int
+                    $data['folder_name'],       // string
+                    $dataentry_status,          // int|null
+                    $dataentry_user,            // int|null
+                    $data['scan_user'],         // int
+                    $data['path'],              // string
+                    $data['hop_ho_so'],         // string
+                    $data['khoa'],              // string
+                    $data['id_nguoisua']        // int
+                );
+
+                if (!$stmt->execute()) {
+                    error_log("MySQL Error: " . $stmt->error);
+                    return false;
+                }
+
+                return true;
+            } catch (Exception $e) {
+                error_log("Lỗi chèn dữ liệu: " . $e->getMessage());
                 return false;
             }
-
-            return true;
-        } catch (Exception $e) {
-            error_log("Lỗi chèn dữ liệu: " . $e->getMessage());
-            return false;
         }
-    }
+
+
     public function deleteByIds(array $ids) {
         if (empty($ids)) return;
 

@@ -4,7 +4,9 @@ include './views/layouts/header.php';
 
 // ===== Thống kê =====
 $total_pdf = mysqli_num_rows(mysqli_query($conn, "SELECT id FROM scan_hoso"));
+
 $total_box = mysqli_num_rows(mysqli_query($conn, "SELECT DISTINCT hop_ho_so FROM scan_hoso"));
+
 $total_record = mysqli_num_rows(mysqli_query($conn, "SELECT DISTINCT folder_name FROM scan_hoso"));
 
 $status_q = mysqli_query($conn, "SELECT dataentry_status, COUNT(*) AS count FROM scan_hoso GROUP BY dataentry_status");
@@ -13,10 +15,6 @@ while ($row = mysqli_fetch_assoc($status_q)) {
     $status_counts[$row['dataentry_status']] = $row['count'];
 }
 
-// 👉 Đếm số dòng trong bảng session_nhaplieu
-$session_q = mysqli_query($conn, "SELECT COUNT(*) AS count FROM session_nhaplieu");
-$session_data = mysqli_fetch_assoc($session_q);
-$total_session = $session_data['count'] ?? 0;
 
 // 👉 Biểu đồ nhập liệu từ bảng ds_vanban
 $chart_q = mysqli_query($conn, "
@@ -41,7 +39,7 @@ while ($row = mysqli_fetch_assoc($chart_q)) {
     $stats = [
         ["Tổng PDF", $total_pdf, "primary", "file-earmark-pdf"],
         ["Đã nhập", $status_counts[2], "success", "check-circle"],
-        ["Đang nhập", $total_session, "warning", "hourglass-split"],
+        ["Đang nhập",$status_counts[1], "warning", "hourglass-split"],
         ["Chưa nhập", $status_counts[0], "danger", "x-circle"],
         ["Số hộp", $total_box, "info", "box"],
         ["Số hồ sơ", $total_record, "dark", "file-earmark-text"],

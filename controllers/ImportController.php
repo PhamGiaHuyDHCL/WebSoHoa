@@ -51,7 +51,12 @@ for ($i = 0; $i < $totalFiles; $i++) {
         $skipped++;
         continue;
     }
-    
+    $ma_muc_luc = trim($_POST['ma_muc_luc'] ?? '');
+    $khoa = trim($_POST['khoa'] ?? '');
+    $hop_ho_so = trim($_POST['hop_ho_so'] ?? '');
+
+    $id_mucluc = $model->getOrInsertId('mucluc', 'MaMucLuc', 'TenMucLuc', $ma_muc_luc);
+
     $safeName = preg_replace('/[^a-zA-Z0-9_\.-]/', '_', pathinfo($originalName, PATHINFO_FILENAME)) . '.pdf';
     $fullPath = $uploadDir . $safeName;
     $relPath = "uploads/$ma_phong/$khoa/$hop_ho_so/$safeName";
@@ -60,14 +65,14 @@ for ($i = 0; $i < $totalFiles; $i++) {
         $data = [
             'khoi' => $khoi,
             'id_phong' => $id_phong,
-            'ma_muc_luc' => $ma_muc_luc,
+            'id_mucluc' => $id_mucluc,
             'khoa' => $khoa,
             'hop_ho_so' => $hop_ho_so,
             'folder_name' => $safeName,
             'path' => $relPath,
             'scan_user' => $user_id,          // <-- dùng ID
-            'dataentry_status' => 0,
-            'dataentry_user' => $user_id,     // <-- dùng ID
+            'dataentry_status' => null,
+            'dataentry_user' => null,     // <-- dùng ID
             'id_nguoisua' => $user_id,        // <-- dùng ID
             'ngay_sua' => date('Y-m-d H:i:s'),
         ];
