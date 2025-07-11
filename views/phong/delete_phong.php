@@ -23,7 +23,12 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['id'])) {
         $stmt->execute();
         echo "success";
     } catch (PDOException $e) {
-        echo "Lỗi xóa phòng: " . $e->getMessage();
+        // Kiểm tra lỗi có phải do ràng buộc khóa ngoại (mã lỗi 23000 + mã phụ 1451)
+        if ($e->getCode() == "23000" && strpos($e->getMessage(), '1451') !== false) {
+            echo "❌ Không thể xóa phòng vì đang được sử dụng trong dữ liệu khác!";
+        } else {
+            echo "❌ Lỗi xóa phòng: " . $e->getMessage();
+        }
     }
 }
 ?>
