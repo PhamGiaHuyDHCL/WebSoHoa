@@ -63,7 +63,19 @@ header("Cache-Control: no-cache, must-revalidate");
           }
       }
   }
-  ?>
+?>
+
+<!-- ✅ Script để tự động đóng alert sau 2 giây -->
+<script>
+  setTimeout(function () {
+    const alerts = document.querySelectorAll('.alert');
+    alerts.forEach(alert => {
+      const bsAlert = bootstrap.Alert.getOrCreateInstance(alert);
+      bsAlert.close();
+    });
+  }, 2000);
+</script>
+
 
   <div class="card mt-4">
     <div class="card-header d-flex justify-content-between align-items-center">
@@ -131,14 +143,33 @@ header("Cache-Control: no-cache, must-revalidate");
       </div>
       <div class="modal-body">
         <form method="POST" action="add_phong.php">
+          <!-- Mã phòng -->
           <div class="mb-3">
             <label for="maPhong" class="form-label">Mã phông *</label>
-            <input type="text" class="form-control" id="maPhong" name="maPhong" required>
+            <input 
+              type="text" 
+              class="form-control" 
+              id="maPhong" 
+              name="maPhong" 
+              required 
+              pattern="^[A-Za-z0-9]{1,10}$" 
+              title="Mã phông chỉ được phép chứa chữ hoặc số, tối đa 10 ký tự.">
           </div>
+
+          <!-- Tên phòng -->
           <div class="mb-3">
             <label for="tenPhong" class="form-label">Tên phông *</label>
-            <input type="text" class="form-control" id="tenPhong" name="tenPhong" required>
+            <input 
+              type="text" 
+              class="form-control" 
+              id="tenPhong" 
+              name="tenPhong" 
+              required 
+              pattern="^[A-Za-zÀ-ỹ0-9\- ]{1,50}$" 
+              title="Tên phòng chỉ được phép chứa chữ cái, số, dấu gạch (-) và khoảng trắng, tối đa 50 ký tự.">
           </div>
+
+
           <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
           <button type="submit" class="btn btn-primary" name="add_phong">Thêm</button>
         </form>
@@ -158,14 +189,32 @@ header("Cache-Control: no-cache, must-revalidate");
       <div class="modal-body">
         <form method="POST" action="edit_phong.php">
           <input type="hidden" id="editId" name="id">
-          <div class="mb-3">
-            <label for="editMaPhong" class="form-label">Mã phông *</label>
-            <input type="text" class="form-control" id="editMaPhong" name="maPhong" required>
-          </div>
-          <div class="mb-3">
-            <label for="editTenPhong" class="form-label">Tên phông *</label>
-            <input type="text" class="form-control" id="editTenPhong" name="tenPhong" required>
-          </div>
+          <!-- Mã phông -->
+            <div class="mb-3">
+              <label for="editMaPhong" class="form-label">Mã phông *</label>
+              <input 
+                type="text" 
+                class="form-control" 
+                id="editMaPhong" 
+                name="maPhong" 
+                required 
+                pattern="^[A-Za-z0-9]{1,10}$" 
+                title="Mã phông chỉ được phép chứa chữ hoặc số, tối đa 10 ký tự.">
+            </div>
+
+            <!-- Tên phông -->
+            <div class="mb-3">
+              <label for="editTenPhong" class="form-label">Tên phông *</label>
+              <input 
+                type="text" 
+                class="form-control" 
+                id="editTenPhong" 
+                name="tenPhong" 
+                required 
+                pattern="^[A-Za-zÀ-ỹ0-9\- ]{1,50}$" 
+                title="Tên phòng chỉ được phép chứa chữ cái, số, dấu gạch (-) và khoảng trắng, tối đa 50 ký tự.">
+            </div>
+
           <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
           <button type="submit" class="btn btn-primary" name="edit_phong">Lưu</button>
         </form>
@@ -193,93 +242,89 @@ header("Cache-Control: no-cache, must-revalidate");
   </div>
 </div>
 
-<!-- Bootstrap JS -->
+
+
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
 <script>
-  // Handle search
-  const searchInput = document.getElementById('searchBox');
-  searchInput.addEventListener('input', function () {
-    const value = this.value.toLowerCase();
-    const rows = document.querySelectorAll("#danhmucTable tbody tr");
+  // ✅ Tìm kiếm
+  $('#searchBox').on('input', function () {
+    const keyword = $(this).val().toLowerCase();
     let visibleCount = 0;
-    rows.forEach(row => {
-      const text = row.innerText.toLowerCase();
-      row.style.display = text.includes(value) ? '' : 'none';
-      if (text.includes(value)) visibleCount++;
+    $('#danhmucTable tbody tr').each(function () {
+      const rowText = $(this).text().toLowerCase();
+      if (rowText.includes(keyword)) {
+        $(this).show();
+        visibleCount++;
+      } else {
+        $(this).hide();
+      }
     });
-    document.getElementById('recordInfo').innerText = `Hiển thị 1 - ${visibleCount} của ${rows.length} phông`;
+    $('#recordInfo').text(`Hiển thị 1 - ${visibleCount} của ${$('#danhmucTable tbody tr').length} phông`);
   });
 
-  // Handle edit modal
-  document.querySelectorAll('.edit-btn').forEach(button => {
-    button.addEventListener('click', function() {
-      const id = this.getAttribute('data-id');
-      const maPhong = this.getAttribute('data-maphong');
-      const tenPhong = this.getAttribute('data-tenphong');
-      document.getElementById('editId').value = id;
-      document.getElementById('editMaPhong').value = maPhong;
-      document.getElementById('editTenPhong').value = tenPhong;
-      console.log('Modal trigger clicked (Edit) with ID: ' + id + ', MaPhong: ' + maPhong + ', TenPhong: ' + tenPhong);
+  // ✅ Gán dữ liệu vào modal sửa
+  $('.edit-btn').on('click', function () {
+    $('#editId').val($(this).data('id'));
+    $('#editMaPhong').val($(this).data('maphong'));
+    $('#editTenPhong').val($(this).data('tenphong'));
+  });
+
+  // ✅ Gán ID cho nút xác nhận xóa
+  $('.delete-btn').on('click', function () {
+    const id = $(this).data('id');
+    $('#confirmDeleteBtn').data('id', id);
+    $('#confirmDeleteModal').modal('show');
+  });
+
+  // ✅ Gửi AJAX xóa phòng
+  $('#confirmDeleteBtn').on('click', function () {
+    const id = $(this).data('id');
+
+    $.ajax({
+      url: 'delete_phong.php',
+      method: 'POST',
+      data: { id: id },
+      success: function (response) {
+        const trimmed = response.trim();
+        if (trimmed === 'success') {
+          $('#confirmDeleteModal').modal('hide');
+          $(`.delete-btn[data-id="${id}"]`).closest('tr').remove();
+          showAlert('Xóa phông thành công!', 'success');
+          updateRecordInfo();
+        } else {
+          $('#confirmDeleteModal').modal('hide');
+          showAlert(trimmed, 'danger');
+        }
+      },
+      error: function (xhr, status, error) {
+        $('#confirmDeleteModal').modal('hide');
+        showAlert('❌ Đã xảy ra lỗi khi gửi yêu cầu xóa phòng!', 'danger');
+        console.error(xhr.responseText || error);
+      }
     });
   });
 
-  // Debugging: Check if add modal is triggered
-  document.querySelector('[data-bs-target="#addPhongModal"]').addEventListener('click', function() {
-    console.log('Modal trigger clicked (Add)');
-  });
+  // ✅ Hiển thị alert (thành công/thất bại)
+  function showAlert(message, type) {
+    $('.container-fluid').prepend(`
+      <div class="alert alert-${type} alert-dismissible fade show" role="alert">
+        ${message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+      </div>
+    `);
+    setTimeout(() => $('.alert').alert('close'), 3000);
+  }
 
-  // Handle delete button
-  document.querySelectorAll('.delete-btn').forEach(button => {
-    button.addEventListener('click', function() {
-      const id = this.getAttribute('data-id');
-      $('#confirmDeleteModal').modal('show');
-      $('#confirmDeleteBtn').off('click').on('click', function() {
-        $.ajax({
-          url: 'delete_phong.php',
-          type: 'POST',
-          data: { id: id },
-          success: function(response) {
-            if (response === 'success') {
-              $('#confirmDeleteModal').modal('hide');
-              const row = $(button).closest('tr');
-              row.remove();
-              $('.container-fluid').prepend(`
-                <div class="alert alert-success alert-dismissible fade show" role="alert">
-                  Xóa phông thành công!
-                  <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                </div>
-              `);
-              setTimeout(() => $('.alert-success').alert('close'), 3000); // Tự động ẩn sau 3 giây
-              // Update record info
-              const rows = document.querySelectorAll("#danhmucTable tbody tr");
-              const visibleRows = Array.from(rows).filter(row => row.style.display !== 'none');
-              document.getElementById('recordInfo').innerText = `Hiển thị 1 - ${visibleRows.length} của ${rows.length} phông`;
-            } else {
-              $('.container-fluid').prepend(`
-                <div class="alert alert-danger alert-dismissible fade show" role="alert">
-                  Xóa thất bại: ${response}
-                  <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                </div>
-              `);
-              setTimeout(() => $('.alert-danger').alert('close'), 3000);
-            }
-          },
-          error: function(xhr, status, error) {
-            console.log('AJAX Error:', xhr.responseText, status, error);
-            $('.container-fluid').prepend(`
-              <div class="alert alert-danger alert-dismissible fade show" role="alert">
-                Lỗi: ${xhr.responseText || error}
-                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-              </div>
-            `);
-            setTimeout(() => $('.alert-danger').alert('close'), 3000);
-          }
-        });
-      });
-    });
-  });
+  // ✅ Cập nhật số bản ghi
+  function updateRecordInfo() {
+    const total = $('#danhmucTable tbody tr').length;
+    const visible = $('#danhmucTable tbody tr:visible').length;
+    $('#recordInfo').text(`Hiển thị 1 - ${visible} của ${total} phông`);
+  }
 </script>
+
 </body>
 </html>
 <?php ob_end_flush(); ?>
