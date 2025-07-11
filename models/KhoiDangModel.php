@@ -234,11 +234,13 @@ class KhoiDangModel {
     $stmt->execute([':folderPath' => "$folderPath/%"]);
     return $stmt->fetch(PDO::FETCH_ASSOC);
     }
-    public function getEditingUserByPath($path) {
-    $stmt = $this->conn->prepare("SELECT * FROM session_nhaplieu WHERE current_path = ? LIMIT 1");
-    $stmt->execute([$path]);
-    return $stmt->fetch(PDO::FETCH_ASSOC);
-    }
+	public function getEditingUserByPath($path) {
+	    $sql = "SELECT dataentry_user as taikhoan_id FROM scan_hoso WHERE path = ? AND dataentry_status = 1";
+	    $stmt = $this->conn->prepare($sql);
+	    $stmt->execute([$path]);
+	    return $stmt->fetch();
+	}
+
 
     public function getNextFileInFolder($folderName, $currentPath) {
         $stmt = $this->conn->prepare("SELECT path FROM scan_hoso WHERE folder_name = ? AND dataentry_status = 0 ORDER BY path ASC");

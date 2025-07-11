@@ -93,14 +93,13 @@ class KhoiDangController {
                     }
                 }
 
-                if ($nextPath) {
-                    $_SESSION['current_file_path'] = $nextPath;
-                    header("Location: ?controller=khoidang&file=" . urlencode($nextPath));
-                } else {
-                    unset($_SESSION['current_file_path']); // Không còn file
-                    $_SESSION['success'] = '✅ Lưu thành công! Đã hết file trong thư mục.';
-                    header("Location: ?controller=khoidang");
-                }
+            if ($nextPath) {
+                header("Location: views/Nhaplieu/khoidang.php?file=" . urlencode($nextPath));
+            } else {
+                unset($_SESSION['current_file_path']);
+                $_SESSION['success'] = '✅ Lưu thành công! Đã hết file trong thư mục.';
+                header("Location: views/Nhaplieu/khoidang&file=" . urlencode($currentPath));
+            }
                 exit;
             } else {
                 echo "<script>alert('❌ Lỗi khi lưu dữ liệu'); history.back();</script>";

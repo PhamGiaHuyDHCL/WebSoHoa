@@ -91,27 +91,31 @@ $ext = strtolower(pathinfo($selectedFilePath, PATHINFO_EXTENSION));
       <form method="get">
         <input type="hidden" name="controller" value="khoidang">
         <select name="file" class="form-select d-inline w-auto" onchange="this.form.submit()">
-<?php foreach ($scan as $file): ?>
-  <?php 
-    if ($file['khoi'] != '2') continue;
+          <?php foreach ($scan as $file): ?>
+            <?php 
+              if ($file['khoi'] != '2') continue;
 
-    // Nếu là file đang được chọn, cố gắng đánh dấu là đang nhập (hàm tự kiểm tra tránh chiếm của người khác)
-    if ($file['path'] === $selectedFilePath) {
-        $model->markDataentryStatusAsEditing($file['id'], $_SESSION['taikhoan_id']);
-    }
-  ?>
-  <option value="<?= htmlspecialchars($file['path']) ?>"
-          <?= ($file['path'] === $selectedFilePath ? 'selected' : '') ?>
-          <?= ($file['dataentry_status'] == 2 && $file['path'] !== $selectedFilePath ? 'disabled' : '') ?>>
-    <?= htmlspecialchars($file['folder_name']) ?> <?= $file['dataentry_status'] == 2 ? '✅' : '' ?>
-  </option>
-<?php endforeach; ?>
+              // Nếu là file đang được chọn, cố gắng đánh dấu là đang nhập (hàm tự kiểm tra tránh chiếm của người khác)
+              if ($file['path'] === $selectedFilePath) {
+                  $model->markDataentryStatusAsEditing($file['id'], $_SESSION['taikhoan_id']);
+              }
+            ?>
+            <option value="<?= htmlspecialchars($file['path']) ?>"
+                    <?= ($file['path'] === $selectedFilePath ? 'selected' : '') ?>
+                    <?= ($file['dataentry_status'] == 2 && $file['path'] !== $selectedFilePath ? 'disabled' : '') ?>>
+              <?= htmlspecialchars($file['folder_name']) ?> <?= $file['dataentry_status'] == 2 ? '✅' : '' ?>
+            </option>
+          <?php endforeach; ?>
 
         </select>
       </form>
     </div>
     <div>
-      <button class="btn btn-outline-secondary btn-sm" disabled>📂 Mở mục lục</button>
+<?php if (!empty($selectedFilePath) && file_exists($filePath)): ?>
+  <a href="<?= $webPath ?>" target="_blank" class="btn btn-outline-secondary btn-sm">📂 Mở mục lục</a>
+<?php else: ?>
+  <button class="btn btn-outline-secondary btn-sm" disabled>📂 Mở mục lục</button>
+<?php endif; ?>
     </div>
   </div>
 
@@ -302,3 +306,7 @@ $ext = strtolower(pathinfo($selectedFilePath, PATHINFO_EXTENSION));
 </div>
 
 <?php include '../layouts/footer.php'; ?>
+<?php if (!empty($_SESSION['success'])): ?>
+  <div class="alert alert-success"><?= $_SESSION['success'] ?></div>
+  <?php unset($_SESSION['success']); ?>
+<?php endif; ?>
