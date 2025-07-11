@@ -41,7 +41,7 @@
             </div>
             <div class="col-md-4">
               <label>Mật khẩu mới (để trống nếu không đổi)</label>
-              <input type="password" id="editMatKhau" name="matkhau" class="form-control"
+              <input type="password" id="editMatKhau" name="new_matkhau" class="form-control"
                    pattern="(?=.*[A-Za-z])(?=.*\d).{6,}"
                    title="Tối thiểu 6 ký tự, gồm ít nhất 1 chữ và 1 số"
                    >
