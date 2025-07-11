@@ -15,8 +15,13 @@ $role_name = "Người dùng";
 $taikhoan = "";
 $id_phanquyen = 0;
 
+
+$hoten = ""; // Khởi tạo trước để tránh lỗi
+
 if (!empty($_SESSION['taikhoan_id'])) {
     $id = $_SESSION['taikhoan_id'];
+    
+    // Truy vấn tài khoản và quyền
     $sql = "SELECT tk.TaiKhoan, tk.IDPhanQuyen, pq.role_name 
             FROM taikhoan tk 
             JOIN phanquyen pq ON tk.IDPhanQuyen = pq.ID 
@@ -27,7 +32,19 @@ if (!empty($_SESSION['taikhoan_id'])) {
     $stmt->bind_result($taikhoan, $id_phanquyen, $role_name);
     $stmt->fetch();
     $stmt->close();
+
+    // 👉 Truy vấn thêm họ tên nhân viên từ bảng nhanvien
+    $sql_nv = "SELECT HoTen FROM nhanvien WHERE ID = ?";
+    $stmt_nv = $conn->prepare($sql_nv);
+    $stmt_nv->bind_param("i", $id);
+    $stmt_nv->execute();
+    $result_nv = $stmt_nv->get_result();
+    if ($row_nv = $result_nv->fetch_assoc()) {
+        $hoten = $row_nv['HoTen'];
+    }
+    $stmt_nv->close();
 }
+
 ?>
 
 <!DOCTYPE html>
@@ -119,7 +136,8 @@ if (!empty($_SESSION['taikhoan_id'])) {
   <!-- Nội dung -->
   <div class="main-content">
     <div class="top-header">
-      <h5 class="text-primary mb-0">Xin chào, <?= htmlspecialchars($role_name) ?> 👋</h5>
+     <h5 class="text-primary mb-0">Xin chào, <?= htmlspecialchars($hoten) ?> 👋</h5>
+
       <div>
         <i class="bi bi-person-circle me-1"></i>
         <?= htmlspecialchars($taikhoan) ?>,
