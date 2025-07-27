@@ -26,11 +26,16 @@
           <div class="row mb-3">
             <div class="col-md-4">
               <label for="taikhoan">Tài khoản *</label>
-              <input name="taikhoan" id="taikhoan" class="form-control" required minlength="4" maxlength="30" title="Tài khoản từ 4 đến 30 ký tự">
+              <input name="taikhoan" id="taikhoan" class="form-control" required
+                    pattern="^[a-zA-Z0-9_]{4,20}$" title="Chỉ gồm chữ cái, số, dấu gạch dưới, từ 4–20 ký tự">
             </div>
+
             <div class="col-md-4">
               <label for="matkhau">Mật khẩu *</label>
-              <input name="matkhau" id="matkhau" type="password" class="form-control" required minlength="6" maxlength="100" title="Mật khẩu từ 6 ký tự trở lên">
+              <input name="matkhau" id="matkhau" type="password" class="form-control" 
+              required pattern="^[a-zA-Z0-9_]{4,20}$" title="Chỉ gồm chữ cái, số, dấu gạch dưới, từ 4–20 ký tự">
+
+
             </div>
             <div class="col-md-4">
               <label for="quyen">Quyền *</label>
