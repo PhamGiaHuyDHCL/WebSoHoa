@@ -1,5 +1,7 @@
 <?php
-session_start();
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
 
 $host = 'localhost';
 $user = 'root';
@@ -30,7 +32,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if (password_verify($matKhau, $row['MatKhau'])) {
             $_SESSION['taikhoan_id'] = $row['ID'];
             $_SESSION['username'] = $row['TaiKhoan'];
-            $_SESSION['phanquyen_id'] = $row['IDPhanQuyen']; // Lưu quyền để xử lý hiển thị sidebar
+            $_SESSION['phanquyen_id'] = $row['IDPhanQuyen'];
 
             header("Location: ../../index.php");
             exit;
@@ -75,13 +77,26 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <form method="POST">
         <div class="mb-3">
             <label for="TaiKhoan" class="form-label">Tài khoản</label>
-            <input type="text" name="TaiKhoan" class="form-control" required>
+            <input type="text" name="TaiKhoan" class="form-control"
+                   pattern="^[a-zA-Z0-9]+$"
+                   title="Chỉ nhập chữ cái và số, không dấu cách hoặc ký tự đặc biệt"
+                   required>
         </div>
         <div class="mb-3">
             <label for="MatKhau" class="form-label">Mật khẩu</label>
-            <input type="password" name="MatKhau" class="form-control" required>
+            <input type="password" name="MatKhau" class="form-control"
+                   pattern="^[a-zA-Z0-9]{6,}$"
+                   title="Mật khẩu phải có ít nhất 6 ký tự, chỉ gồm chữ cái và số"
+                   required>
         </div>
+
+
         <button type="submit" class="btn btn-primary w-100">Đăng nhập</button>
+
+        <!-- ✅ Nút Quên mật khẩu -->
+        <div class="text-center mt-3">
+            <a href="quenmatkhau.php">Quên mật khẩu?</a>
+        </div>
     </form>
 </div>
 </body>
