@@ -32,7 +32,30 @@ class DangNhapController {
             }
         }
 
-        include 'http://localhost/websohoa1/views/login/dangnhap.php'; // Giao diện form đăng nhập
+        include __DIR__ . '/../views/login/dangnhap.php';// Giao diện form đăng nhập
        
     }
+     public function quenMatKhau() {
+        $thongBao = '';
+        $taikhoan = '';
+        $sdt = '';
+        $matkhaumoi = '';
+        $nhaplaimatkhau = '';
+
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $taikhoan = $_POST['taikhoan'] ?? '';
+            $sdt = $_POST['sdt'] ?? '';
+            $matkhaumoi = $_POST['matkhaumoi'] ?? '';
+            $nhaplaimatkhau = $_POST['nhaplaimatkhau'] ?? '';
+
+            if ($matkhaumoi !== $nhaplaimatkhau) {
+                $thongBao = "❌ Mật khẩu nhập lại không khớp.";
+            } else {
+                $thongBao = $this->model->resetMatKhau($taikhoan, $sdt, $matkhaumoi);
+            }
+        }
+
+        include __DIR__ . '/../views/login/quenmatkhau.php';
+    }
+
 }
