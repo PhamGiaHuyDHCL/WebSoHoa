@@ -19,7 +19,7 @@ try {
 // Kiểm tra đăng nhập
 if (!isset($_SESSION['taikhoan_id'])) {
     // Chưa đăng nhập, chuyển về trang đăng nhập
-    header("Location:http://localhost/websohoa1/login/dangnhap.php");
+    header("Location:http://localhost/websohoa1/views/login/dangnhap.php");
     exit();
 }
 
@@ -35,7 +35,7 @@ try {
     if (!$user) {
         // Tài khoản không tồn tại => đăng xuất luôn
         session_destroy();
-        header("Location:http://localhost/websohoa1/login/dangnhap.php");
+        header("Location:http://localhost/websohoa1/views/login/dangnhap.php");
         exit();
     }
 } catch (PDOException $e) {
@@ -55,3 +55,4 @@ function checkAdmin() {
         exit();
     }
 }
+
