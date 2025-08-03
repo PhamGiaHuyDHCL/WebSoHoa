@@ -51,13 +51,21 @@ for ($i = 0; $i < $totalFiles; $i++) {
         $skipped++;
         continue;
     }
-    $ma_muc_luc = trim($_POST['ma_muc_luc'] ?? '');
-    $khoa = trim($_POST['khoa'] ?? '');
-    $hop_ho_so = trim($_POST['hop_ho_so'] ?? '');
 
     $id_mucluc = $model->getOrInsertId('mucluc', 'MaMucLuc', 'TenMucLuc', $ma_muc_luc);
 
-    $safeName = preg_replace('/[^a-zA-Z0-9_\.-]/', '_', pathinfo($originalName, PATHINFO_FILENAME)) . '.pdf';
+    // Tạo tên file an toàn
+    $filenameNoExt = pathinfo($originalName, PATHINFO_FILENAME);
+    $safeName = preg_replace('/[^a-zA-Z0-9_\.-]/', '_', $filenameNoExt) . '.pdf';
+
+    // **Tách 3 phần đầu làm folder_name**
+    $parts = explode('-', $filenameNoExt);
+    if (count($parts) >= 3) {
+        $folderName = implode('-', array_slice($parts, 0, 3));
+    } else {
+        $folderName = $filenameNoExt;
+    }
+
     $fullPath = $uploadDir . $safeName;
     $relPath = "uploads/$ma_phong/$khoa/$hop_ho_so/$safeName";
 
@@ -68,15 +76,14 @@ for ($i = 0; $i < $totalFiles; $i++) {
             'id_mucluc' => $id_mucluc,
             'khoa' => $khoa,
             'hop_ho_so' => $hop_ho_so,
-            'folder_name' => $safeName,
+            'folder_name' => $folderName, // <-- Lưu tên cắt 3 phần
             'path' => $relPath,
-            'scan_user' => $user_id,          // <-- dùng ID
+            'scan_user' => $user_id,
             'dataentry_status' => null,
-            'dataentry_user' => null,     // <-- dùng ID
-            'id_nguoisua' => $user_id,        // <-- dùng ID
+            'dataentry_user' => null,
+            'id_nguoisua' => $user_id,
             'ngay_sua' => date('Y-m-d H:i:s'),
         ];
-
 
         if ($model->insertImportData($data)) {
             $success++;
@@ -95,3 +102,4 @@ if ($errors) {
 
 header("Location: ../views/import/dsimport.php");
 exit;
+ 
