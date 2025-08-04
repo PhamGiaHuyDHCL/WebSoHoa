@@ -40,7 +40,10 @@ class KhoiDangController {
             $maDVBQ = trim($_POST['ma_dvbq'] ?? '');
             $maHoSo = trim($_POST['ma_hoso'] ?? '');
 
-            if (!$maPhongInput || !$maMucLuc || !$maDVBQ || !$maHoSo) {
+            // Trích tên file từ path để kiểm tra
+            $fileName = basename($currentPath);
+            $isMLorKH = stripos($fileName, 'ML') !== false || stripos($fileName, 'KH') !== false;
+            if (!$isMLorKH && (!$maPhongInput || !$maMucLuc || !$maDVBQ || !$maHoSo)) {
                 echo "<script>alert('Bạn cần nhập đầy đủ các trường bắt buộc'); history.back();</script>";
                 exit;
             }

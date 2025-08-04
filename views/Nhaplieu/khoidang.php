@@ -103,7 +103,8 @@ $ext = strtolower(pathinfo($selectedFilePath, PATHINFO_EXTENSION));
             <option value="<?= htmlspecialchars($file['path']) ?>"
                     <?= ($file['path'] === $selectedFilePath ? 'selected' : '') ?>
                     <?= ($file['dataentry_status'] == 2 && $file['path'] !== $selectedFilePath ? 'disabled' : '') ?>>
-              <?= htmlspecialchars($file['folder_name']) ?> <?= $file['dataentry_status'] == 2 ? '✅' : '' ?>
+              <?= $file['dataentry_status'] == 2 ? '✅' : '' ?> 
+              <?= htmlspecialchars(basename($file['path'])) ?>
             </option>
           <?php endforeach; ?>
 
@@ -178,10 +179,14 @@ $ext = strtolower(pathinfo($selectedFilePath, PATHINFO_EXTENSION));
         <div class="card-header bg-light"><strong>Nhập liệu</strong></div>
         <div class="card-body flex-grow-1 overflow-auto">
           <?php if ($selectedFilePath && $selectedScanId && $mucLucInfo['dataentry_status'] != 2): ?>
+            <?php
+              $fileName = basename($selectedFilePath);
+              $isMLorKH = stripos($fileName, 'ML') !== false || stripos($fileName, 'KH') !== false;
+            ?>
           <form method="post" action="../../index.php?controller=khoidang&action=saveVanBan">
             <input type="hidden" name="ten_taptin" value="<?= basename($selectedFilePath) ?>">
             <input type="hidden" name="scan_vanban_Id" value="<?= $selectedScanId ?>">
-
+            <?php if (!$isMLorKH): ?>
             <div class="row mb-2">
               <div class="col">
                 <label>Mã phông *</label>
@@ -273,7 +278,7 @@ $ext = strtolower(pathinfo($selectedFilePath, PATHINFO_EXTENSION));
                        title="Chỉ được nhập chữ và số">
               </div>
             </div>
-
+            <?php endif; ?>
             <div class="text-end mt-3">
               <button type="submit" class="btn btn-success">💾 Lưu và chuyển tiếp</button>
             </div>
