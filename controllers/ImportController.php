@@ -100,4 +100,9 @@ if ($errors) {
 }
 
 header("Location: ../views/import/dsimport.php");
+<<<<<<< HEAD
 exit;
+=======
+exit;
+ 
+>>>>>>> f5a1f4503b871367da54cb62d9b6270bf5e8cd27
