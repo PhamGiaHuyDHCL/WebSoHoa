@@ -75,50 +75,101 @@ while ($row = mysqli_fetch_assoc($chart_q)) {
         <div class="card-header fw-bold">Danh sách file PDF import</div>
         <div class="card-body tree" style="max-height: 300px; overflow-y: auto; font-size: 0.9rem;">
                         <ul class="list-unstyled">
-                        <?php
-                        $q = mysqli_query($conn, "
-                            SELECT khoi, khoa, hop_ho_so, folder_name, ngay_nhap
-                            FROM scan_hoso
-                            ORDER BY khoi, khoa, hop_ho_so, ngay_nhap DESC
-                        ");
 
-                        $data = [];
-                        while ($row = mysqli_fetch_assoc($q)) {
-                            $khoi = $row['khoi'];
-                            $khoa = $row['khoa'];
-                            $hop = $row['hop_ho_so'];
-                            $file = $row['folder_name'];
-                            $ngay = date('d-m-Y', strtotime($row['ngay_nhap']));
+<?php
+// Truy vấn dữ liệu từ bảng scan_hoso
+$data = [];
 
-                            $data[$khoi][$khoa][$hop][] = ['file' => $file, 'ngay' => $ngay];
-                        }
+$q = mysqli_query($conn, "
+    SELECT khoi, khoa, hop_ho_so, folder_name, path, DATE(ngay_nhap) AS ngay_nhap
+    FROM scan_hoso
+    ORDER BY khoi, khoa, hop_ho_so, folder_name, path
+");
 
-                        foreach ($data as $khoi => $khoas) {
-                            echo "<li class='mb-2'>
-                                <span class='badge bg-light text-dark border'>Khối: $khoi</span>
-                                <ul class='list-unstyled ms-3'>";
-                            foreach ($khoas as $khoa => $hops) {
-                                echo "<li class='mb-2'>
-                                    <span class='badge bg-light text-dark border'>Khoa: $khoa</span>
-                                    <ul class='list-unstyled ms-3'>";
-                                foreach ($hops as $hop => $files) {
-                                    $collapseId = "collapse_{$khoi}_{$khoa}_{$hop}";
-                                    echo "<li class='mb-2'>
-                                        <div class='toggle-btn collapsed' data-bs-toggle='collapse' data-bs-target='#$collapseId' style='cursor:pointer;'>
-                                            <i class='bi bi-chevron-right me-1'></i> <span class='badge bg-light text-dark border'>Hộp: $hop</span>
-                                        </div>
-                                        <ul class='list-unstyled ms-3 collapse' id='$collapseId'>";
-                                    foreach ($files as $f) {
-                                        echo "<li><i class='bi bi-file-earmark-pdf text-danger me-1'></i> {$f['file']} <small class='text-muted'>(nhập: {$f['ngay']})</small></li>";
-                                    }
-                                    echo "</ul></li>";
-                                }
-                                echo "</ul></li>";
-                            }
-                            echo "</ul></li>";
-                        }
-                        ?>
-                    </ul>
+while ($row = mysqli_fetch_assoc($q)) {
+    $khoi = $row['khoi'] ?? 'Khác';
+    $khoa = $row['khoa'] ?? 'Không rõ';
+    $hop  = $row['hop_ho_so'] ?? 'Chưa rõ';
+    $folder = $row['folder_name'];
+    $ngay   = $row['ngay_nhap'];
+    $pdf    = basename($row['path']); // chỉ tên file
+
+    $data[$khoi][$khoa][$hop][$folder]['ngay'] = $ngay;
+    $data[$khoi][$khoa][$hop][$folder]['pdfs'][] = $pdf;
+}
+?>
+
+    <?php
+    $khoi_labels = [
+        1 => "Khối Chính Quyền ",
+        2 => "Khối Đảng",
+       
+    ];
+    ?>
+<ul class="list-unstyled">
+<?php foreach ($data as $khoi => $khoas): ?>
+  <?php $collapseKhoi = "collapse_" . md5("khoi-$khoi"); ?>
+  <li class="mb-2">
+    <div class="toggle-btn collapsed" data-bs-toggle="collapse" data-bs-target="#<?= $collapseKhoi ?>" style="cursor:pointer;">
+      <label>
+        <input type="checkbox" class="form-check-input me-1">
+        <i class='bi bi-collection me-1'></i><?= $khoi_labels[$khoi] ?? "Khối $khoi" ?>
+      </label>
+    </div>
+    <ul class="list-unstyled ms-3 collapse" id="<?= $collapseKhoi ?>">
+    <?php foreach ($khoas as $khoa => $hops): ?>
+      <?php $collapseKhoa = "collapse_" . md5("khoa-$khoi-$khoa"); ?>
+      <li class="mb-2">
+        <div class="toggle-btn collapsed" data-bs-toggle="collapse" data-bs-target="#<?= $collapseKhoa ?>" style="cursor:pointer;">
+          <label>
+            <input type="checkbox" class="form-check-input me-1">
+            <i class='bi bi-folder me-1'></i><?= $khoa ?>
+          </label>
+        </div>
+        <ul class="list-unstyled ms-3 collapse" id="<?= $collapseKhoa ?>">
+        <?php foreach ($hops as $hop => $folders): ?>
+          <?php $collapseHop = "collapse_" . md5("$khoi-$khoa-$hop"); ?>
+          <li class="mb-2">
+            <div class="toggle-btn collapsed" data-bs-toggle="collapse" data-bs-target="#<?= $collapseHop ?>" style="cursor:pointer;">
+              <label>
+                <input type="checkbox" class="form-check-input me-1">
+                <i class='bi bi-box-seam me-1'></i><?= $hop ?>
+              </label>
+            </div>
+            <ul class="list-unstyled ms-3 collapse" id="<?= $collapseHop ?>">
+              <?php foreach ($folders as $folder => $info): ?>
+                <?php $collapseFolder = "collapse_" . md5("$khoi-$khoa-$hop-$folder"); ?>
+                <li class="mb-2">
+                  <div class="toggle-btn collapsed" data-bs-toggle="collapse" data-bs-target="#<?= $collapseFolder ?>" style="cursor:pointer;">
+                    <label>
+                      <input type="checkbox" class="form-check-input me-1">
+                      <i class='bi bi-folder2-open me-1'></i><?= $folder ?> 
+                      <small class="text-muted">(nhập: <?= $info['ngay'] ?>)</small>
+                    </label>
+                  </div>
+                  <ul class="list-unstyled ms-3 collapse" id="<?= $collapseFolder ?>">
+                    <?php foreach ($info['pdfs'] as $pdf): ?>
+                      <li>
+                        <label>
+                          <input type="checkbox" class="form-check-input me-1">
+                          <i class='bi bi-file-earmark-pdf text-danger me-1'></i><?= $pdf ?>
+                        </label>
+                      </li>
+                    <?php endforeach; ?>
+                  </ul>
+                </li>
+              <?php endforeach; ?>
+            </ul>
+          </li>
+        <?php endforeach; ?>
+        </ul>
+      </li>
+    <?php endforeach; ?>
+    </ul>
+  </li>
+<?php endforeach; ?>
+</ul>
+
                 </div>
             </div>
         </div>
