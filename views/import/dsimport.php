@@ -44,6 +44,14 @@ $totalPages = ceil($total / $filters['limit']);
 <!DOCTYPE html>
 <html lang="vi">
 <head>
+ <style>
+    html, body {
+      height: auto !important;
+      min-height: 100% !important;
+      overflow-y: auto !important;  /* luôn cho phép cuộn dọc */
+      overflow-x: hidden;           /* tránh cuộn ngang */
+    }
+  </style>
   <meta charset="UTF-8">
   <title>Danh sách file PDF import</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
@@ -274,3 +282,4 @@ $totalPages = ceil($total / $filters['limit']);
   </script>
 </body>
 </html>
+
