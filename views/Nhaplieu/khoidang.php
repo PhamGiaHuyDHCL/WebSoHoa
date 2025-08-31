@@ -174,19 +174,150 @@ $ext = strtolower(pathinfo($selectedFilePath, PATHINFO_EXTENSION));
       <?php endif; ?>
     </div>
 
-    <div class="col-md-4 p-3 d-flex flex-column" style="height: 100%; overflow: hidden;">
-      <div class="card shadow-sm flex-grow-1 d-flex flex-column" style="overflow: hidden;">
-        <div class="card-header bg-light"><strong>Nhập liệu</strong></div>
-        <div class="card-body flex-grow-1 overflow-auto">
-          <?php if ($selectedFilePath && $selectedScanId && $mucLucInfo['dataentry_status'] != 2): ?>
-            <?php
-              $fileName = basename($selectedFilePath);
-              $isMLorKH = stripos($fileName, 'ML') !== false || stripos($fileName, 'KH') !== false;
-            ?>
-          <form method="post" action="../../index.php?controller=khoidang&action=saveVanBan">
-            <input type="hidden" name="ten_taptin" value="<?= basename($selectedFilePath) ?>">
-            <input type="hidden" name="scan_vanban_Id" value="<?= $selectedScanId ?>">
-            <?php if (!$isMLorKH): ?>
+<div class="col-md-4 p-3 d-flex flex-column" style="height: 100%; overflow: hidden;">
+  <div class="card shadow-sm flex-grow-1 d-flex flex-column" style="overflow: hidden;">
+    <div class="card-header bg-light"><strong>Nhập liệu</strong></div>
+    <div class="card-body flex-grow-1 overflow-auto">
+
+      <?php
+      // Chưa chọn file
+      if (!$selectedFilePath || !$selectedScanId): ?>
+        <div class="alert alert-warning">Vui lòng chọn file để nhập liệu.</div>
+
+      <?php
+      // File đã hoàn tất nhập liệu
+      elseif ($mucLucInfo['dataentry_status'] == 2): ?>
+        <div class="alert alert-success">✅ Văn bản này đã được nhập liệu. Không thể chỉnh sửa thêm.</div>
+
+      <?php
+      // File đang được người khác nhập
+      elseif (($editingUser = $model->getEditingUserByPath($mucLucInfo['path']))
+              && $editingUser['taikhoan_id'] != ($_SESSION['taikhoan_id'] ?? null)): ?>
+        <div class="alert alert-danger">
+          ❗ File này đang được người khác nhập liệu (Tài khoản ID: <?= $editingUser['taikhoan_id'] ?>).
+          Vui lòng chờ hoặc chọn file khác.
+        </div>
+
+      <?php
+      // Các trường hợp còn lại – hiển thị form
+      else:
+
+        $fileName = basename($selectedFilePath);
+        $isMLorKH = stripos($fileName, 'ML') !== false || stripos($fileName, 'KH') !== false;
+        $isBHS    = stripos($fileName, 'BHS') !== false;
+        ?>
+
+        <form method="post"
+              action="../../index.php?controller=khoidang&action=saveVanBan">
+          <input type="hidden" name="ten_taptin" value="<?= $fileName ?>">
+          <input type="hidden" name="scan_vanban_Id" value="<?= $selectedScanId ?>">
+
+          <?php
+          /*-------------------------------------------------
+           * 1. HỒ SƠ (BHS)
+           *-------------------------------------------------*/
+          if ($isBHS): ?>
+
+            <div class="row mb-2">
+              <div class="col">
+                <label>Mã đơn vị bảo quản *</label>
+                <input name="id_dvbq" type="number" class="form-control" required>
+              </div>
+              <div class="col">
+                <label>Mã hồ sơ *</label>
+                <input name="ma_hoso" type="text" class="form-control" required>
+              </div>
+              <div class="col">
+                <label>Mã phông *</label>
+                <input name="id_phong" type="number" class="form-control" required>
+              </div>
+              <div class="col">
+                <label>Mã mục lục *</label>
+                <input name="id_mucluc" type="number" class="form-control" required>
+              </div>
+            </div>
+
+            <div class="mb-2">
+              <label>Tiêu đề hồ sơ</label>
+              <textarea name="tieu_de" class="form-control" rows="2"></textarea>
+            </div>
+
+            <div class="row mb-2">
+              <div class="col">
+                <label>Số ký hiệu hồ sơ</label>
+                <input type="text" name="so_kyhieu_hoso" class="form-control">
+              </div>
+              <div class="col">
+                <label>Mã độ mật</label>
+                <select name="id_do_mat" class="form-select">
+                  <option value="">-- Độ mật --</option>
+                  <?php foreach ($doMat as $dm): ?>
+                    <option value="<?= $dm['ID'] ?>"><?= htmlspecialchars($dm['MaDoMat'].' - '.$dm['TenDoMat']) ?></option>
+                  <?php endforeach; ?>
+                </select>
+              </div>
+              <div class="col">
+                <label>Số lượng trang</label>
+                <input type="number" name="so_luong_trang" class="form-control" value="1" min="1">
+              </div>
+            </div>
+
+            <div class="row mb-2">
+              <div class="col">
+                <label>Thời gian bắt đầu</label>
+                <input type="date" name="thoigian_batdau" class="form-control">
+              </div>
+              <div class="col">
+                <label>Thời gian kết thúc</label>
+                <input type="date" name="thoigian_ketthuc" class="form-control">
+              </div>
+              <div class="col">
+                <label>Mã thời hạn bảo quản</label>
+                <input type="number" name="id_thoihan_baoquan" class="form-control">
+              </div>
+            </div>
+
+            <div class="row mb-2">
+              <div class="col">
+                <label>Tình trạng vật lý</label>
+                <input type="number" name="id_tinhtrang_vatly" class="form-control">
+              </div>
+              <div class="col">
+                <label>Mã chuyên đề</label>
+                <input type="number" name="id_chuyen_de" class="form-control">
+              </div>
+              <div class="col">
+                <label>Mã ngôn ngữ</label>
+                <input type="number" name="id_ngon_ngu" class="form-control">
+              </div>
+            </div>
+
+            <div class="mb-2">
+              <label>Từ khóa hồ sơ</label>
+              <textarea name="tu_khoa" class="form-control" rows="2"></textarea>
+            </div>
+
+            <div class="row mb-2">
+              <div class="col">
+                <label>Thời gian tài liệu</label>
+                <input type="text" name="thoigian_tailieu" class="form-control">
+              </div>
+              <div class="col">
+                <label>Mã hộp hồ sơ</label>
+                <input type="text" name="hop_ho_so" class="form-control">
+              </div>
+              <div class="col">
+                <label>Mã hồ sơ scan liên kết</label>
+                <input type="number" name="scan_hoso_id" class="form-control">
+              </div>
+            </div>
+
+          <?php
+          /*-------------------------------------------------
+           * 2. VĂN BẢN THƯỜNG (không phải ML/KH)
+           *-------------------------------------------------*/
+          elseif (!$isMLorKH): ?>
+
             <div class="row mb-2">
               <div class="col">
                 <label>Mã phông *</label>
@@ -218,12 +349,18 @@ $ext = strtolower(pathinfo($selectedFilePath, PATHINFO_EXTENSION));
               </div>
             </div>
 
-
-            <div class="mb-2"><label>Số văn bản</label><input type="text" name="so_vanban" class="form-control"></div>
-            <div class="mb-2"><label>Trích yếu</label><textarea name="trich_yeu" class="form-control" rows="2"></textarea></div>
+            <div class="mb-2"><label>Số văn bản</label>
+              <input type="text" name="so_vanban" class="form-control">
+            </div>
+            <div class="mb-2"><label>Trích yếu</label>
+              <textarea name="trich_yeu" class="form-control" rows="2"></textarea>
+            </div>
 
             <div class="row mb-2">
-              <div class="col"><label>Ngày văn bản</label><input type="date" name="ngay_thang_nam_vanban" class="form-control"></div>
+              <div class="col">
+                <label>Ngày văn bản</label>
+                <input type="date" name="ngay_thang_nam_vanban" class="form-control">
+              </div>
               <div class="col">
                 <label>Độ mật</label>
                 <select name="id_do_mat" class="form-select">
@@ -235,7 +372,9 @@ $ext = strtolower(pathinfo($selectedFilePath, PATHINFO_EXTENSION));
               </div>
             </div>
 
-            <div class="mb-2"><label>Tác giả</label><input type="text" name="tacgia_vanban" class="form-control"></div>
+            <div class="mb-2"><label>Tác giả</label>
+              <input type="text" name="tacgia_vanban" class="form-control">
+            </div>
 
             <div class="row mb-2">
               <div class="col">
@@ -251,13 +390,12 @@ $ext = strtolower(pathinfo($selectedFilePath, PATHINFO_EXTENSION));
                 <label>Số trang</label>
                 <input type="number" name="sotrang_vanban" class="form-control" value="1" min="1">
               </div>
-
               <div class="col">
                 <label>STT</label>
                 <input type="text" name="so_thutu" class="form-control"
                        pattern="[A-Za-z0-9]+"
                        oninput="this.value = this.value.replace(/[^0-9]/g, '')"
-                       title="Chỉ được nhập chữ và số">
+                       title="Chỉ được nhập số">
               </div>
             </div>
 
@@ -269,47 +407,30 @@ $ext = strtolower(pathinfo($selectedFilePath, PATHINFO_EXTENSION));
                        oninput="this.value = this.value.replace(/[^a-zA-Z0-9]/g, '')"
                        title="Chỉ được nhập chữ và số">
               </div>
-
               <div class="col">
                 <label>Trang số</label>
                 <input type="text" name="trang_so" class="form-control"
                        pattern="[A-Za-z0-9]+"
                        oninput="this.value = this.value.replace(/[^0-9]/g, '')"
-                       title="Chỉ được nhập chữ và số">
+                       title="Chỉ được nhập số">
               </div>
             </div>
-            <?php endif; ?>
-            <div class="text-end mt-3">
-              <button type="submit" class="btn btn-success">💾 Lưu và chuyển tiếp</button>
-            </div>
-          </form>
-        <?php elseif ($mucLucInfo): ?>
-            <?php
-              $editingUser = $model->getEditingUserByPath($mucLucInfo['path']);
-              $currentUserId = $_SESSION['taikhoan_id'] ?? null;
-            ?>
 
-            <?php if ($mucLucInfo['dataentry_status'] == 2): ?>
-              <div class="alert alert-success">✅ Văn bản này đã được nhập liệu. Không thể chỉnh sửa thêm.</div>
+          <?php endif; // $isBHS / !$isMLorKH ?>
 
-            <?php elseif ($editingUser && $editingUser['taikhoan_id'] != $currentUserId): ?>
-              <div class="alert alert-danger">
-                ❗ File này đang được người khác nhập liệu (Tài khoản ID: <?= $editingUser['taikhoan_id'] ?>). Vui lòng chờ hoặc chọn file khác.
-              </div>
+          <div class="text-end mt-3">
+            <button type="submit" class="btn btn-success">
+              <?= $isBHS ? '💾 Lưu hồ sơ' : '💾 Lưu và chuyển tiếp' ?>
+            </button>
+          </div>
 
-            <?php else: ?>
-              <div class="alert alert-warning">Vui lòng chọn file để nhập liệu.</div>
-            <?php endif; ?>
-        <?php else: ?>
-          <div class="alert alert-warning">Vui lòng chọn file để nhập liệu.</div>
-        <?php endif; ?>
+        </form>
 
-        </div>
-      </div>
+      <?php endif; // Các điều kiện trên ?>
+
     </div>
   </div>
 </div>
-
 <?php include '../layouts/footer.php'; ?>
 <?php if (!empty($_SESSION['success'])): ?>
   <div class="alert alert-success"><?= $_SESSION['success'] ?></div>
